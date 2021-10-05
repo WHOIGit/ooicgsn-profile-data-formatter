@@ -1,8 +1,8 @@
 *.pyc
+*.py~
 *.log
 .spyproject/
 .idea/
 __pycache__/
 tests/output/**
-legacy/**
 
