@@ -1,0 +1,16 @@
+"""
+class: remusXYSubsetDataReader
+
+description:
+
+history:
+09/21/2021 ppw created
+"""
+import ..fileReader
+
+class remusXYSubsetDataReader( auvDataReader ) :
+
+
+    def __init__( self ) :
+
+        # TODO

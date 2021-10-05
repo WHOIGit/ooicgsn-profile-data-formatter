@@ -1,0 +1,1 @@
+./legacy/gliderdac/configuration.py
