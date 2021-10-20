@@ -1,1 +1,0 @@
--c /home/paul/cgsn/ProfileDataFormatter/tests/config/ -d /home/paul/cgsn/ProfileDataFormatter/tests/data/cp_379-2021-246-1-33.mrg -p "{'ctd_sensor_prefix': 'sci', 'start_profile_id': 1}" -o ./tests/output

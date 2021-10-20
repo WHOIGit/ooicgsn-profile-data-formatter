@@ -1,0 +1,47 @@
+// Remus 600 global_addributes.json
+//
+// global_attributes.json captures metadata to be placed in the 
+//     global attributes of the netCDF files. This one is meant to
+//     not necessarily change per deployment processed, but for
+//     a project.  Any deployment specific global attributes to add
+//     such as deployment launch time, should be added to
+//     deployments.json which should be edited for every deployment.
+//
+//     See the IOOS Glider DAC instructions and the CF and ACDD
+//     convention pages for more information about Global Attributes.
+//
+// ProfileDataFormatter JSON configurations allow comments in the file
+//     (no inline comments). Any leading whitespace is ignored.
+//     pay attention to completing JSON syntax though.
+{
+    "Conventions": "CF-1.6, COARDS, ACDD-1.3",
+    "Metadata_Conventions": "CF-1.6, Unidata Dataset Discovery v1.0",
+    "acknowledgment": "Funding provided by the National Science Foundation. AUV deployed by OOI Coastal & Global Scale Nodes (CGSN) personnel at Woods Hole Oceanographic Institution.",
+    "cdm_data_type": "Trajectory",
+    "contributor_name": "Al Plueddemann, Derek Buffitt, Peter Brickley, Paul Whelan",
+    "contributor_role": "CGSN Principal Investigator/Project Scientist, CGSN Project Manager, CGSN Operations Lead, CGSN Software Manager",
+    "creator_email": "ooi-cgsn-ops@whoi.edu",
+    "creator_name": "Paul Whelan",
+    "creator_institution": "OOI Coastal & Global Scale Nodes (CGSN)",
+    "creator_url": "https://oceanobservatories.org/",
+    "featureType": "trajectory",
+    "format_version": "IOOS_Glider_NetCDF_v2.0.nc",
+    "institution": "OOI Coastal & Global Scale Nodes (CGSN)",
+    "keywords": "Oceans > Ocean Pressure > Water Pressure, Oceans > Ocean Temperature > Water Temperature, Oceans > Salinity/Density > Conductivity, Oceans > Salinity/Density > Density, Oceans > Salinity/Density > Salinity, Oceans > Ocean Chemistry > Chlorophyll, Oceans > Ocean Chemistry > Oxygen, Oceans > Ocean Chemistry > Organic Matter, Oceans > Ocean Optics > Scattering, Oceans > Ocean Optics > Photosynthetically Active Radiation",
+    "keywords_vocabulary": "GCMD Science Keywords",
+    "license": "All OOI data including data from OOI core sensors and all proposed sensors added\nby Principal Investigators, will be rapidly disseminated, open, and freely\navailable (within constraints of national security). Rapidly disseminated\nimplies that data will be made available as soon as technically feasible, but\ngenerally in near real-time, with latencies as small as seconds for the cabled\ncomponents. In limited cases, individual PIs who have developed a data source\nthat becomes part of the OOI network may request exclusive rights to the data\nfor a period of no more than one year from the onset of the data stream. The\nreliability, quality and completeness of data obtained through OOI are intended\nto be used in an education or research context. It is assumed that outages and\nerrors can occur and are dealt with by the users of the data. These data and\nsoftware are not for use in operational or decision-making settings. The OOI\nprogram makes reasonable efforts to ensure that the data provided are accurate.\nHowever, there may be no Quality Control (QC) performed on data acquired and\nprovided through the OOI program, and there may be no Quality Assurance (QA)\nprovided on information on those data sets. If QC/QA is performed, it is\ndescribed in the metadata.\n\nThe OOI program both produces and, through collaborations within the geosciences\ncommunity, gains access to data sets which may be redistributed either directly\nor indirectly at no cost and with no restrictions.\n\nWith regard to data distribution, all users must comply with any applicable U.S.\nexport laws and regulations. The OOI Program is not responsible for the use of\nthe data it provides. The full data policy is available at\nhttp://oceanobservatories.org/usage-policy.",
+    "metadata_link": "http://oceanobservatories.org/site/cp05moas/",
+    "naming_authority": "org.oceanobservatories",
+    "platform_type": "Remus AUV",
+    "processing_level": "Raw Remus AUV data. No QC performed",
+    "program": "Ocean Observatories Initiative (OOI)",
+    "project": "Coastal & Global Scale Nodes (CGSN)",
+    "publisher_email": "ooi-cgsn-ops@whoi.edu",
+    "publisher_name": "Ocean Observatories Initiative (OOI)",
+    "publisher_url": "http://oceanobservatories.org/",
+    "references": "http://oceanobservatories.org/",
+    "sea_name": "North Atlantic Ocean",
+    "source": "Observational data from a profiling auv",
+    "standard_name_vocabulary": "CF Standard Name Table v68",
+    "summary": "The Pioneer Array is located on the continental shelf and slope south of Martha's Vineyard. The shelf-slope area is home to a highly productive ecosystem, and coincident with a persistent ocean frontal system where heat, salt, nutrients and other properties are exchanged between the shelf and the deep ocean. This dataset contains raw Remus AUV data parsed directly from the native auv subset file format. No corrections or other quality control algorithms have been applied."
+}

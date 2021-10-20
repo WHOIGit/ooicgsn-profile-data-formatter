@@ -333,8 +333,8 @@ class slocum20Platform( gliderPlatform ) :
             # change to indented log format (see above)
             logging.getLogger().handlers[0].setFormatter( dataFormat )
 
-            # Parse the dba file
-            dba = DbaData(dataFile)
+            # Read the data file
+            dba = self.dataFileReader.readIntoDbaData( dataFile )
             if dba is None or dba.N == 0:
                 logging.warning('Skipping empty data file: {:s}'.format(dataFile))
                 continue
