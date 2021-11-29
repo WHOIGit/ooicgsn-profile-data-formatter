@@ -25,7 +25,7 @@
     // attributes that are relevant to NCEI for archival
     "platform": {
         "comment": "",
-	"long_name": "OOI Coastal Pioneer 600m Remus AUV cp_6264"
+	"long_name": "OOI Coastal Pioneer 600m Remus AUV cp_6264",
         // id is required and must be the ID found in NCEI look up
         // tables, which is the glider name from autoexec.mi unless
         // otherwise arranged with NCEI.

@@ -25,8 +25,10 @@
         "dimension": null,
         "type": "i4",
         "attrs": {
-            "ancillary_variables": " ",
-            "instrument": "instrument_ctd, instrument_nbctd, instrument_flbbcd, instrument_par, instrument_oxygen, instrument_suna, instrument_sonar, instrument_gps, instrument_auvstate, instrument_auvfault, instrument_auvmotor, instrument_auvemergencyboard, instrument_auvoilcompensator, instrument_auvsmartbattery, instrument_auvtransmission"
+	    "_FillValue": NaN,
+	    "comment": "Remus 600 AUV",
+	    "type": "platform",
+            "instrument": "instrument_ctd, instrument_flbbcd, instrument_par, instrument_oxygen, instrument_suna, instrument_sonar, instrument_adcp"
         }
     },
     "crs": {
@@ -42,23 +44,25 @@
         }
     },
     "llat_time": {
+        "nc_var_name": "time",
+        "dimension": "time",
+        "is_dimension": true,
+        "dimension_length": null,
+        "type": "f8",
         "attrs": {
             "axis": "T",
             "calendar": "gregorian",
             "standard_name": "time",
             "long_name": "Time",
+	    "instrument": "instrument_gps",
+	    "subset_field": "timestamp",
             "units": "seconds since 1970-01-01T00:00:00Z",
             "valid_max": 2147483647.0,
             "valid_min": 0.0,
             "_FillValue": NaN,
-            "ancillary_variables": " ",
+            "ancillary_variables": "time_qc",
             "observation_type": "measured"
-        },
-        "dimension": "time",
-        "is_dimension": true,
-        "dimension_length": null,
-        "nc_var_name": "time",
-        "type": "f8"
+        }
     },
     "llat_latitude": {
         "nc_var_name": "lat",
@@ -66,15 +70,17 @@
         "dimension": "time",
         "attrs": {
             "_FillValue": NaN,
-            "ancillary_variables": " ",
+            "ancillary_variables": "lat_qc",
             "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
             "reference": "WGS84",
             "platform": "platform",
+            "instrument": "instrument_gps",
+	    "subset_field": "latitude",
             "units": "degrees_north",
-            "precision": 5,
+            "precision": 6,
             "axis": "Y",
-            "observation_type": "calculated",
-            "long_name": "Estimated Latitude",
+            "observation_type": "measured",
+            "long_name": "Latitude",
             "valid_min": -90.0,
             "valid_max": 90.0,
             "standard_name": "latitude"
@@ -86,47 +92,35 @@
         "dimension": "time",
         "attrs": {
             "_FillValue": NaN,
-            "ancillary_variables": " ",
+            "ancillary_variables": "lon_qc",
             "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
             "reference": "WGS84",
             "platform": "platform",
+            "instrument": "instrument_gps",
+	    "subset_field": "longitude",
             "units": "degrees_east",
-            "precision": 5,
+            "precision": 6,
             "axis": "X",
-            "observation_type": "calculated",
-            "long_name": "Estimated Longitude",
+            "observation_type": "measured",
+            "long_name": "Longitude",
             "valid_min": -180.0,
             "valid_max": 180.0,
             "standard_name": "longitude"
         }
     },
-    "ctd_timestamp": {
-        "attrs": {
-            "axis": "T",
-            "calendar": "gregorian",
-            "instrument": "instrument_ctd",
-            "standard_name": "time",
-            "long_name": "CTD Timestamp",
-            "units": "seconds since 1970-01-01T00:00:00Z",
-            "valid_max": 2147483647.0,
-            "valid_min": 0.0,
-            "_FillValue": NaN,
-            "ancillary_variables": " ",
-            "observation_type": "measured"
-        },
-        "dimension": "time",
-        "nc_var_name": "ctd_timestamp",
-        "type": "f8"
-    },
     "ctd_conductivity": {
+        "nc_var_name": "conductivity",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
-            "accuracy": 0.0003,
+            "accuracy": " ",
             "ancillary_variables": "conductivity_qc",
-            "resolution": 1e-05,
-            "precision": "N/A",
+            "resolution": " ",
+            "precision": " ",
             "instrument": "instrument_ctd",
-            "long_name": "Sea Water Conductivity",
+	    "subset_field": "conductivity",
+            "long_name": "Conductivity",
             "platform": "platform",
             "observation_type": "measured",
             "OOI_data_product_name": "CONDWAT",
@@ -135,34 +129,35 @@
             "units": "S m-1",
             "valid_max": 10.0,
             "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "conductivity",
-        "type": "f8"
+        }
     },
     "ctd_temp": {
+        "nc_var_name": "temperature",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
-            "accuracy": 0.002,
+            "accuracy": " ",
             "ancillary_variables": "temperature_qc",
             "instrument": "instrument_ctd",
+	    "subset_field": "temperature",
             "long_name": "Sea Water Temperature",
             "observation_type": "measured",
             "OOI_data_product_name": "TEMPWAT",
             "OOI_data_level": "L1a",
             "platform": "platform",
-            "precision": "N/A",
-            "resolution": 0.001,
+            "precision": " ",
+            "resolution": " ",
             "standard_name": "sea_water_temperature",
             "units": "Celsius",
             "valid_max": 40.0,
             "valid_min": -5.0
-        },
-        "dimension": "time",
-        "nc_var_name": "temperature",
-        "type": "f8"
+        }
     },
     "ctd_pressure": {
+        "nc_var_name": "pressure",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "axis": "Z",
             "long_name": "Pressure",
@@ -175,25 +170,27 @@
             "platform": "platform",
             "units": "dbar",
             "instrument": "instrument_ctd",
+	    "subset_field": "pressure",
             "valid_max": 2000.0,
             "valid_min": 0.0,
-            "accuracy": 0.01,
+            "accuracy": " ",
             "ancillary_variables": "pressure_qc",
-            "resolution": 0.01,
-            "precision": 0.01,
+            "resolution": " ",
+            "precision": " ",
             "_FillValue": NaN
-        },
-        "dimension": "time",
-        "nc_var_name": "pressure",
-        "type": "f8"
+        }
     },
     "ctd_depth": {
+        "nc_var_name": "depth",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "axis": "Z",
             "long_name": "Depth",
             "instrument": "instrument_ctd",
-            "observation_type": "calculated",
+	    "subset_field": "depth",
+            "observation_type": "measured",
             "positive": "down",
             "reference_datum": "sea-surface",
             "standard_name": "depth",
@@ -203,21 +200,22 @@
             "valid_min": 0.0,
             "accuracy": 0.01,
             "ancillary_variables": "depth_qc",
-            "resolution": 0.01,
-            "precision": 0.01
-        },
-        "dimension": "time",
-        "nc_var_name": "depth",
-        "type": "f8"
+            "resolution": " ",
+            "precision": " "
+        }
     },
     "ctd_salinity": {
+        "nc_var_name": "salinity",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
-            "accuracy": 0.005,
+            "accuracy": " ",
             "ancillary_variables": "salinity_qc",
             "instrument": "instrument_ctd",
-            "long_name": "Sea Water Practical Salinity",
-            "observation_type": "calculated",
+	    "subset_field": "salinity",
+            "long_name": "Salinity",
+            "observation_type": "measured",
             "OOI_data_product_name": "PRACSAL",
             "OOI_data_level": "L2a",
             "platform": "platform",
@@ -227,117 +225,88 @@
             "units": "1",
             "valid_max": 40.0,
             "valid_min": 0.0
-        },
+        }
+    },
+    "ctd_density": {
+        "nc_var_name": "density",
         "dimension": "time",
-        "nc_var_name": "salinity",
-        "type": "f8"
-    },
-    "flort_radiation_wavelength": {
-        "attrs": {
-            "standard_name": "radiation_wavelength",
-            "long_name": "Backscatter Radiation Wavelength",
-            "units": "nm",
-            "_FillValue": -999,
-            "observation_type": "measured"
-        },
-        "dimension": null,
-        "nc_var_name": "radiation_wavelength",
-        "type": "i4"
-    },
-    "flort_chlor": {
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "instrument_flbbcd,chlorophyll_qc",
-            "instrument": "instrument_flbbcd",
-            "long_name": "Chlorophyll Concentration",
-            "observation_type": "measured",
-            "OOI_data_product_name": "CHLAFLO",
-            "OOI_data_level": "L1a",
-            "platform": "platform",
-            "precision": " ",
-            "resolution": "0.012",
-            "standard_name": "mass_concentration_of_chlorophyll_a_in_sea_water",
-            "units": "ug l-1",
-            "valid_max": 50.0,
-            "valid_min": 0.0,
-            "dark_offset": 50.0,
-            "scale_factor": 0.0068
-        },
-        "dimension": "time",
-        "nc_var_name": "chlorophyll",
-        "type": "f8"
-    },
-    "flort_cdom_units": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "instrument_flbbcd",
-            "instrument": "instrument_flbbcd",
-            "long_name": "Fluorometric CDOM Concentration",
-            "OOI_data_product_name": "CDOMFLO",
-            "OOI_data_level": "L1a",
-            "observation_type": "measured",
-            "platform": "platform",
-            "precision": " ",
-            "resolution": " 0.092",
-            "standard_name": "concentration_of_colored_dissolved_organic_matter_in_sea_water_expressed_as_equivalent_mass_fraction_of_quinine_sulfate_dihydrate",
-            "units": "ppb",
-            "valid_max": 375.0,
-            "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "CDOM",
-        "type": "f8"
-    },
-    "flort_betaparticles": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "instrument_flbbcd,radiation_wavelength",
-            "instrument": "instrument_flbbcd",
-            "long_name": "Optical Backscatter beta particles (red wavelengths)",
-            "OOI_data_product_name": "FLUB???",
-            "OOI_data_level": "L1a",
-            "observation_type": "measured",
-            "platform": "platform",
-            "precision": " ",
-            "radiation_wavelength": "700nm",
-            "resolution": "0.001",
-            "standard_name": "volume_backwards_scattering_coefficient_of_radiative_flux_in_sea_water",
-            "units": "ug l-1"
-        },
-        "dimension": "time",
-        "nc_var_name": "betaparticles",
-        "type": "f8"
-    },
-    "flort_backscatter": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "instrument_flbbcd, radiation_wavelength, backscatter_qc",
-            "instrument": "instrument_flbbcd",
-            "long_name": "Optical Backscatter (red wavelengths)",
-            "OOI_data_product_name": "FLUBSCT",
-            "OOI_data_level": "L2a",
+            "axis": "Z",
+            "long_name": "Density",
+            "instrument": "instrument_ctd",
+	    "subset_field": "salinity,temperature,pressure,latitude,longitude",
             "observation_type": "calculated",
+            "positive": "down",
+            "reference_datum": "sea-surface",
+            "standard_name": "sea_water_density",
+            "platform": "platform",
+            "units": "kg m-3",
+            "valid_max": 1040.0,
+            "valid_min": 1015.0,
+            "accuracy": " ",
+            "ancillary_variables": "density_qc",
+            "resolution": " ",
+            "precision": " "
+        }
+    },
+    "flort_chlorophyll_a":{
+        "nc_var_name": "chlorophyll_a",
+        "dimension": "time",
+        "type": "f8",
+	"attrs": {
+            "_FillValue": NaN,
+            "accuracy": " ",
+            "ancillary_variables": "flort_chlorophyll_qc",
+            "instrument": "instrument_flbbcd",
+	    "subset_field": "parameter6",
+            "long_name": "Chlorophyll A concentration",
+            "observation_type": "measured",
+            "OOI_data_product_name": "",
+            "OOI_data_level": "L1a",
             "platform": "platform",
             "precision": " ",
-            "radiation_wavelength": "700nm",
-            "resolution": "0.001",
-            "standard_name": "volume_backwards_scattering_coefficient_of_radiative_flux_in_sea_water",
-            "units": "m-1"
-        },
+            "resolution": " ",
+            "standard_name": "mass_concentration_of_chlorophyll_a_in_sea_water",
+            "units": "ug L-1",
+            "valid_max": 50.0,
+            "valid_min": 0.01
+	}
+    },
+    "flort_cdom":{
+        "nc_var_name": "cdom",
         "dimension": "time",
-        "nc_var_name": "backscatter",
-        "type": "f8"
+        "type": "f8",
+	"attrs": {
+            "_FillValue": NaN,
+            "accuracy": " ",
+            "ancillary_variables": "",
+            "instrument": "instrument_flbbcd",
+	    "subset_field": "parameter9",
+            "long_name": "Chromophoric dissolved organic matter",
+            "observation_type": "measured",
+            "OOI_data_product_name": "",
+            "OOI_data_level": "L1a",
+            "platform": "platform",
+            "precision": " ",
+            "resolution": " ",
+            "standard_name": "",
+            "units": "ppb",
+            "valid_max": 375,
+            "valid_min": 0.3
+	}
     },
     "par_calc_irradiance": {
+        "nc_var_name": "PAR",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "accuracy": " ",
-            "ancillary_variables": "instrument_par, irradiance_qc",
+            "ancillary_variables": "PAR_qc",
             "instrument": "instrument_par",
+	    "subset_field": "depth,sensorVoltage,temperature,supplyVoltage",
             "long_name": "Photosynthetically Active Radiation",
             "observation_type": "calculated",
             "OOI_data_product_name": "OPTPARW",
@@ -349,96 +318,18 @@
             "units": "umol m-2 s-1",
             "valid_max": 6000.0,
             "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "PAR",
-        "type": "f8"
-    },
-    "par_voltage": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "instrument_par",
-            "instrument": "instrument_par",
-            "long_name": "Sensor voltage",
-            "observation_type": "measured",
-            "platform": "platform",
-            "precision": " ",
-            "resolution": " ",
-            "units": "V",
-            "valid_max": 12.0,
-            "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "PAR",
-        "type": "f8"
-    },
-    "par_supply_voltage": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "instrument_par",
-            "instrument": "instrument_par",
-            "long_name": "Supply voltage",
-            "observation_type": "measured",
-            "platform": "platform",
-            "precision": " ",
-            "resolution": " ",
-            "units": "V",
-            "valid_max": 12.0,
-            "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "PAR",
-        "type": "f8"
-    },
-    "par_temp": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": 0.002,
-            "ancillary_variables": " ",
-            "instrument": "instrument_par",
-            "long_name": "PAR Sea Water Temperature",
-            "observation_type": "measured",
-            "platform": "platform",
-            "precision": "N/A",
-            "resolution": 0.001,
-            "units": "Celsius",
-            "valid_max": 40.0,
-            "valid_min": -5.0
-        },
-        "dimension": "time",
-        "nc_var_name": "par_temperature",
-        "type": "f8"
-    },
-    "par_depth": {
-        "attrs": {
-            "_FillValue": NaN,
-            "axis": "Z",
-            "long_name": "Depth",
-            "instrument": "instrument_par",
-            "observation_type": "measured",
-            "positive": "down",
-            "reference_datum": "sea-surface",
-            "platform": "platform",
-            "units": "m",
-            "valid_max": 2000.0,
-            "valid_min": 0.0,
-            "accuracy": 0.01,
-            "ancillary_variables": " ",
-            "resolution": 0.01,
-            "precision": 0.01
-        },
-        "dimension": "time",
-        "nc_var_name": "depth",
-        "type": "f8"
+        }
     },
     "o2_oxygen": {
+        "nc_var_name": "dissolved_oxygen",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "accuracy": " ",
-            "ancillary_variables": "instrument_oxygen",
+            "ancillary_variables": "dissolved_oxygen_qc",
             "instrument": "o2_oxygen_saturation",
+	    "subset_field": "calculatedConcentration",
             "long_name": "Dissolved Oxygen Concentration",
             "observation_type": "calculated",
             "OOI_data_product_name": "DOCONCS",
@@ -447,39 +338,21 @@
             "precision": " ",
             "resolution": " ",
             "standard_name": "moles_of_oxygen_per_unit_mass_in_sea_water",
+            "units": "umol L-1",
             "valid_max": 500.0,
             "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "dissolved_oxygen",
-        "type": "f8"
-    },
-    "o2_oxygen_saturation": {
-        "attrs": {
-            "_FillValue": NaN,
-            "accuracy": " ",
-            "ancillary_variables": "dissolved_oxygen",
-            "instrument": "instrument_oxygen",
-            "long_name": "Oxygen Saturation",
-            "observation_type": "measured",
-            "platform": "platform",
-            "precision": " ",
-            "resolution": " ",
-            "standard_name": "fractional_saturation_of_oxygen_in_sea_water",
-            "units": "percent",
-            "valid_max": 120.0,
-            "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "oxygen_saturation",
-        "type": "f8"
+        }
     },
     "suna_nitrate": {
+        "nc_var_name": "dissolved_nitrate",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "accuracy": " ",
-            "ancillary_variables": "instrument_suna, nitrate_qc",
+            "ancillary_variables": "dissolved_nitrate_qc",
             "instrument": "instrument_suna",
+	    "subset_field": "nitrate_concentration",
             "long_name": "Dissolved Nitrate Concentration",
             "observation_type": "measured",
             "OOI_data_product_name": "?",
@@ -491,17 +364,18 @@
             "units": "uMol L-1",
             "valid_max": 500.0,
             "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "dissolved_nitrate",
-        "type": "f8"
+        }
     },
     "suna_nitrogen": {
+        "nc_var_name": "nitrogen_in_nitrate",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "accuracy": " ",
-            "ancillary_variables": "instrument_suna, nitrogen_qc",
+            "ancillary_variables": "nitrogen_in_nitrate_qc",
             "instrument": "instrument_suna",
+	    "subset_field": "nitrogenInNitrate",
             "long_name": "Nitrogen in nitrate",
             "observation_type": "measured",
             "OOI_data_product_name": "?",
@@ -513,126 +387,194 @@
             "units": "Mg L-1",
             "valid_max": 500.0,
             "valid_min": 0.0
-        },
-        "dimension": "time",
-        "nc_var_name": "dissolved_nitrate",
-        "type": "f8"
+        }
     },
-    "sonar_pitch": {
+    "adcp_current_east": {
+        "nc_var_name": "current_eastward",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
-            "long_name": "Glider Vehicle Pitch Angle",
+            "accuracy": " ",
+            "ancillary_variables": "current_eastward_qc",
+            "instrument": "instrument_adcp",
+	    "subset_field": "averageCurrent,averageDirection",
+            "long_name": "current east",
+            "observation_type": "calculated",
+            "OOI_data_product_name": "?",
+            "OOI_data_level": "L1a",
+            "platform": "platform",
+            "precision": " ",
+            "resolution": " ",
+            "standard_name": "eastward_sea_water_velocity",
+            "units": "m s-1",
+            "valid_max": 20.0,
+            "valid_min": 0.0
+        }
+    },
+    "adcp_current_north": {
+        "nc_var_name": "current_northward",
+        "dimension": "time",
+        "type": "f8",
+        "attrs": {
+            "_FillValue": NaN,
+            "accuracy": " ",
+            "ancillary_variables": "current_northward_qc",
+            "instrument": "instrument_adcp",
+	    "subset_field": "averageCurrent,averageDirection",
+            "long_name": "current north",
+            "observation_type": "calculated",
+            "OOI_data_product_name": "?",
+            "OOI_data_level": "L1a",
+            "platform": "platform",
+            "precision": " ",
+            "resolution": " ",
+            "standard_name": "northward_sea_water_velocity",
+            "units": "m s-1",
+            "valid_max": 20.0,
+            "valid_min": 0.0
+        }
+    },
+    "sonar_pitch": {
+        "nc_var_name": "pitch",
+        "dimension": "time",
+        "type": "f8",
+        "attrs": {
+            "_FillValue": NaN,
+            "accuracy": " ",
+            "ancillary_variables": "pitch_qc",
+            "long_name": "AUV Vehicle Pitch Angle",
             "instrument": "instrument_sonar",
+	    "subset_field": "pitch",
             "standard_name": "platform_pitch_angle",
             "comment": "",
             "observation_type": "measured",
             "platform": "platform",
+            "precision": " ",
+            "resolution": " ",
             "units": "degrees",
             "valid_max": 90.0,
             "valid_min": -90.0
-        },
-        "dimension": "time",
-        "nc_var_name": "pitch",
-        "type": "f8"
+        }
     },
     "sonar_roll": {
+        "nc_var_name": "roll",
+        "dimension": "time",
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
-            "long_name": "Glider Vehicle Roll Angle",
+            "accuracy": " ",
+            "ancillary_variables": "roll_qc",
+            "long_name": "AUV Vehicle Roll Angle",
             "instrument": "instrument_sonar",
+	    "subset_field": "roll",
             "standard_name": "platform_roll_angle",
             "comment": "",
             "observation_type": "measured",
             "platform": "platform",
+            "precision": " ",
+            "resolution": " ",
             "units": "degrees",
             "valid_max": 90.0,
             "valid_min": -90.0
-        },
-        "dimension": "time",
-        "nc_var_name": "roll",
-        "type": "f8"
-    }
-    "gps_time_uv": {
+        }
+    },
+    "adcp_time_uv": {
+        "nc_var_name": "time_uv",
+        "dimension": null,
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "long_name": "Depth-Averaged Time",
             "standard_name": "time",
+            "instrument": "instrument_adcp",
+            "ancillary_variables": "time_uv_qc",
+	    "subset_field": "timestamp,missionTime",
             "calendar": "gregorian",
             "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater. The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
             "observation_type": "calculated",
             "units": "seconds since 1970-01-01T00:00:00Z"
-        },
-        "dimension": null,
-        "nc_var_name": "time_uv",
-        "type": "f8"
+        }
     },
-    "gps_lat_uv": {
+    "adcp_lat_uv": {
+        "nc_var_name": "lat_uv",
+        "dimension": null,
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "long_name": "Depth-Averaged Latitude",
             "standard_name": "latitude",
+            "instrument": "instrument_adcp",
+            "ancillary_variables": "lat_uv_qc",
+	    "subset_field": "latitude",
             "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater. The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
             "observation_type": "calculated",
             "platform": "platform",
             "units": "degrees_north",
             "valid_max": 90.0,
             "valid_min": -90.0
-        },
-        "dimension": null,
-        "nc_var_name": "lat_uv",
-        "type": "f8"
+        }
     },
-    "gps_lon_uv": {
+    "adcp_lon_uv": {
+        "nc_var_name": "lon_uv",
+        "dimension": null,
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "long_name": "Depth-Averaged Longitude",
             "standard_name": "longitude",
+            "instrument": "instrument_adcp",
+            "ancillary_variables": "lon_uv_qc",
+	    "subset_field": "longitude",
             "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater. The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
             "observation_type": "calculated",
             "platform": "platform",
             "units": "degrees_east",
             "valid_max": 180.0,
             "valid_min": -180.0
-        },
-        "dimension": null,
-        "nc_var_name": "lon_uv",
-        "type": "f8"
+        }
     },
-    "gps_u": {
+    "adcp_u": {
+        "nc_var_name": "u",
+        "dimension": null,
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "long_name": "Depth-Averaged Eastward Sea Water Velocity",
             "standard_name": "eastward_sea_water_velocity",
+            "instrument": "instrument_adcp",
+            "ancillary_variables": "u_qc",
+	    "subset_field": "averageCurrent,averageDirection",
             "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater. The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
             "observation_type": "calculated",
             "platform": "platform",
             "units": "m s-1",
             "valid_max": 10.0,
             "valid_min": -10.0
-        },
-        "dimension": null,
-        "nc_var_name": "u",
-        "type": "f8"
+        }
     },
-    "gps_v": {
+    "adcp_v": {
+        "nc_var_name": "v",
+        "dimension": null,
+        "type": "f8",
         "attrs": {
             "_FillValue": NaN,
             "long_name": "Depth-Averaged Northward Sea Water Velocity",
             "standard_name": "northward_sea_water_velocity",
+            "instrument": "instrument_adcp",
+            "ancillary_variables": "v_qc",
+	    "subset_field": "averageCurrent,averageDirection",
             "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater. The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
             "observation_type": "calculated",
             "platform": "platform",
             "units": "m s-1",
             "valid_max": 10.0,
             "valid_min": -10.0
-        },
-        "dimension": null,
-        "nc_var_name": "v",
-        "type": "f8"
+        }
     },
     "profile_id": {
-        "dimension": null,
         "nc_var_name": "profile_id",
+        "dimension": null,
         "type": "i4",
         "attrs": {
             "_FillValue": -999,
@@ -644,13 +586,14 @@
         }
     },
     "profile_time": {
-        "dimension": null,
         "nc_var_name": "profile_time",
+        "dimension": null,
         "type": "f8",
         "attrs": {
             "_FillValue": -999.0,
             "axis": "T",
             "calendar": "gregorian",
+            "ancillary_variables": "profile_time_qc",
             "comment": "Timestamp corresponding to the mid-point of the profile",
             "long_name": "Profile Center Time",
             "observation_type": "calculated",
@@ -668,8 +611,8 @@
         "attrs": {
             "_FillValue": -999.0,
             "comment": "Value is interpolated to provide an estimate of the latitude at the mid-point of the profile",
+            "ancillary_variables": "profile_lat_qc",
             "units": "degree_north",
-            "precision": 5,
             "platform": "platform",
             "axis": "Y",
             "observation_type": "calculated",
@@ -686,8 +629,8 @@
         "attrs": {
             "_FillValue": -999.0,
             "comment": "Value is interpolated to provide an estimate of the longitude at the mid-point of the profile",
+            "ancillary_variables": "profile_lon_qc",
             "units": "degree_east",
-            "precision": 5,
             "platform": "platform",
             "axis": "X",
             "observation_type": "calculated",
@@ -696,11 +639,5 @@
             "valid_max": 180.0,
             "standard_name": "longitude"
         }
-    },
-    ///////////// insert remaining auv fault data here
-    ///////////// insert remaining auv motor data here
-    ///////////// insert remaining auv emergency board data here
-    ///////////// insert remaining auv oil compensator data here
-    ///////////// insert remaining auv smart battery data here
-    ///////////// insert remaining auv transmission data here
+    }
 }

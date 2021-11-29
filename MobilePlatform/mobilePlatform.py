@@ -8,6 +8,9 @@ history:
 09/21/2021 ppw created
 """
 import common.constants as constants
+import os
+import logging
+
 
 class mobilePlatform( ) :
 
@@ -29,7 +32,14 @@ class mobilePlatform( ) :
         self._outputFormat = 'NETCDF4_CLASSIC'
         self._outputCompression = 1
         self._suppressOutput = False
-        
+
+        # Initialize config dictionaries to empty
+        self._globalsCfg = {}
+        self._deploymentCfg = {}
+        self._instrumentsCfg = {}
+        self._sensorsCfg = {}
+
+
     @property
     def cfgReader(self):
         return self._cfgReader
@@ -134,6 +144,38 @@ class mobilePlatform( ) :
     def suppressOutput(self, suppress):
         self._suppressOutput = suppress
 
+    @property
+    def globalsCfg(self):
+        return self._globalsCfg
+
+    @globalsCfg.setter
+    def globalsCfg(self, globals):
+        self._globalsCfg = globals
+
+    @property
+    def deploymentCfg(self):
+        return self._deploymentCfg
+
+    @deploymentCfg.setter
+    def deploymentCfg(self, deployment):
+        self._deploymentCfg = deployment
+
+    @property
+    def instrumentsCfg(self):
+        return self._instrumentsCfg
+
+    @instrumentsCfg.setter
+    def instrumentsCfg(self, instruments):
+        self._instrumentsCfg = instruments
+
+    @property
+    def sensorsCfg(self):
+        return self._sensorsCfg
+
+    @sensorsCfg.setter
+    def sensorsCfg(self, sensors):
+        self._sensorsCfg = sensors
+
     # abstract virtual methods
 
     # abstract, implement in subclass
@@ -145,10 +187,32 @@ class mobilePlatform( ) :
         raise NotImplementedError()
 
     # abstract, implement in subclass
-    def FormatData(self, args ):
+    def FormatData(self ):
         raise NotImplementedError()
 
     # abstract, implement in subclass
     def cleanupFormatting(self):
         raise NotImplementedError()
+
+    def readCfgFile(self, cfgPath, cfgFile):
+        """
+        Reads a configuration file into a dictionary structure
+        :param cfgPath:
+        :param cfgFile:
+        :return: cfgDict
+        """
+
+        # Load configuration definitions
+
+        cfgDict = {}
+        try:
+            cfgFilePath = os.path.join( cfgPath, cfgFile)
+            cfgDict = self.cfgReader.readDictionary( cfgFilePath )
+            return cfgDict
+
+        except ValueError as e:
+            self._logger.error(
+                'Error parsing config file {:s}'.format( cfgFile ))
+            raise e
+
 

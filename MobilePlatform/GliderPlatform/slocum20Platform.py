@@ -406,46 +406,19 @@ class slocum20Platform( gliderPlatform ) :
 
         # Load configured sensor definitions
 
-        try:
-            self.cfgSensorDefs = self.cfgReader.readDictionary(
-                self.sensorDefsCfgPath)
-        except ValueError as e:
-            self._logger.error(
-                'Error parsing deployment-specific sensor definitions: '
-                '{:s} ({:})'.format(self.sensorDefsCfgPath, e)
-            )
-            raise e
+        self.cfgSensorDefs = self.readCfgFile( self.cfgReader, self.sensorDefsCfgPath )
 
         # Load configured deployment definitions
 
-        try:
-            self.deploymentDefs = self.cfgReader.readDictionary(
-                self.deploymentCfgPath)
-        except ValueError as e:
-            self._logger.error(
-                'Error loading {:s}: {:}'.format(
-                    self.deploymentCfgPath, e)
-            )
-            raise e
+        self.deploymentDefs = self.readCfgFile( self.cfgReader, self.deploymentCfgPath )
 
-        try:
-            self.globalAttribs = self.cfgReader.readDictionary(self.globalAttributesPath)
+        # Load configured global attributes
 
-        except ValueError as e:
-            self._logger.error(
-                'Error loading {:s}: {:}'.format(
-                    self.globalAttributesPath, e)
-            )
-            raise e
+        self.globalAttribs = self.readCfgFile( self.cfgReader, self.globalAttributesPath )
 
-        try:
-            self.instrumentCfgs = self.cfgReader.readDictionary(self.instrumentsCfgPath)
-        except ValueError as e:
-            self._logger.error(
-                'Error loading {:s}: {:}'.format(
-                    self.instrumentsCfgPath, e)
-            )
-            raise e
+        # Load configured instruments
+
+        self.instrumentCfgs = self.readCfgFile( self.cfgReader, self.instrumentsCfgPath )
 
     def _validateConfigData(self):
         """

@@ -38,7 +38,7 @@
             "calibration_report": "<example for an attribute>",
             "TWR_customer_service_report": "<example included only>",
             // not sure why, but I think these are required.
-            "type": "platform",
+            "type": "instrument",
             "platform": "platform"
         }
     },

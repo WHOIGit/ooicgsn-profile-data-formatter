@@ -1,11 +1,9 @@
 """
 class: profileDataFormatter.py
-
 description: Main module for app that takes oceanographic instrument data from
 vertical profiling platforms (gliders, auvs) and formats the data into netCSV
 format files for import into data repositories, such as IOOS-DAC and OOI Data
 Explorer.
-
 history:
 09/21/2021 ppw created
 """
@@ -138,8 +136,9 @@ def main( args ) :
     platform.cfgPath = args.config_path
     platform.dataFiles = args.data_files
     platform.targetHost = args.target_repository
-    cleanString = args.platform_args.replace('\'', "\"")
-    platform.platformArgs = platformArgsStringToDict( cleanString )
+    if args.platform_args is not None:
+        cleanString = args.platform_args.replace('\'', "\"")
+        platform.platformArgs = platformArgsStringToDict( cleanString )
     platform.outputPath = args.output_path
     platform.replaceOutputFiles = args.clobber
     platform.outputFormat = args.nc_format

@@ -38,8 +38,8 @@ class remus600SubsetDataReader( auvDataReader ) :
         remusData = remus600SubsetData()
         remusData.tempPath = tempOutputPath
 
-        # Read line by line to saparate msg sections
-        with open( dataFile, 'r' ) as infile :
+        # Read line by line to separate msg sections
+        with open( dataFile, 'r', errors='ignore' ) as infile :
 
             msgId = None
             outfile = None

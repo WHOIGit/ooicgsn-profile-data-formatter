@@ -36,6 +36,13 @@ class remus600SubsetData(  ) :
     def msgData( self ) :
         return self._msgData
 
+    def timesInMillisecs(self, timesSecs, dayOffsetsMillisecs):
+
+        if dayOffsetsMillisecs is not None:
+            return dayOffsetsMillisecs % 1000 / 1000. + timesSecs
+        else:
+            return timesSecs
+
     def getDataForMessageId(self, msgId):
         """
         Retrieve remus600 Subset data for msgId in the form of
@@ -47,3 +54,30 @@ class remus600SubsetData(  ) :
         if msgId in self.msgData:
             msgData = self.msgData[msgId].getData()
         return msgData
+
+    def getDataSliceForMessageId(self, msgId, startTime, endTime):
+        """
+        Retrieve time range bound slice of data for passed msgId
+        :param msgId:
+        :param startTime:
+        :param endTime:
+        :return: dataframe values within the time range passed
+        """
+
+        msgData = self.getDataForMessageId(msgId)
+
+        # use timestamp, missiontime to get millisec timestamps
+        # for slicing dataset between start and end times
+
+        timesMs = self.timesInMillisecs(
+            msgData.get('timestamp'), msgData.get('missionTime') )
+
+        sliceRange = timesMs.between( startTime, endTime )
+
+        # Note: if reading slices of data repeatedly proves too slow,
+        # and memory proves not a concern, lose the copy and enable
+        # cacheing in remus600SubsetMsgData.py
+
+        dataSlice = msgData[ sliceRange ].copy()
+
+        return dataSlice

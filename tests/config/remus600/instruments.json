@@ -1,6 +1,7 @@
 // Mocked up instrument data for Remus 600
 //
 // ToDo: get actual instrument specifics for OOI 6264 AUV
+//       Do we need AUV msg data: sonar, gps, auv state, etc.?
 //
 // instruments.json captures metadata specifically about the
 //     the science instruments for the deployment to be processed.
@@ -41,7 +42,8 @@
             "factory_calibrated": "2021-03-31T00:07:30Z",
             "calibration_report": "CTDGV-M_SBE-Remus_SN_6264_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/8b3c9aaf-3007-431b-8fd3-167d4204360b",
-            "type": "platform",
+	    "subset_msg_id": "1107",
+            "type": "instrument",
             "platform": "platform"
         }
     },
@@ -58,6 +60,7 @@
             "calibration_report": "FLORT-N_FLBBCDSLC_SN_####_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/d2c7e6af-b362-44cd-be27-e2c97c2544ex",
             "TWR_customer_service_report": "####",
+	    "subset_msg_id": "1118",
             "type": "instrument",
             "platform": "platform"
         }
@@ -75,6 +78,7 @@
             "calibration_report": "PARAD-M_QSP2150_SN_?????_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/384a5bc3-33b0-4f67-8937-84f29397604x",
             "TWR_customer_service_report": "####",
+	    "subset_msg_id": "1173",
             "type": "instrument",
             "platform": "platform"
         }
@@ -94,6 +98,7 @@
             "calibration_report": "DOSTA-M_Optode-4831_SN_???_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/802d2213-990e-49a5-8039-59995835f73x",
             "TWR_customer_service_report": "????",
+	    "subset_msg_id": "1109",
             "type": "instrument",
             "platform": "platform"
         }
@@ -103,8 +108,8 @@
         "type": "i4",
         "attrs": {
             "serial_number": "???",
-            "make_model": "SUNA-x",
-            "OOI_series": "SUNA-x",
+            "make_model": "SUNA-V2",
+            "OOI_series": "SUNA-?",
             "long_name": "Satlantic optical nitrate sensor",
             "calibration_date": "2021-03-31T07:00:00Z",
             "comment": "none",
@@ -112,6 +117,7 @@
             "calibration_report": "SUNA-x_Satl-????_SN_???_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/802d2213-990e-49a5-8039-59995835f73x",
             "TWR_customer_service_report": "????",
+	    "subset_msg_id": "1174",
             "type": "instrument",
             "platform": "platform"
         }
@@ -130,6 +136,26 @@
             "calibration_report": "Echo-852_Imag-????_SN_???_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/802d2213-990e-49a5-8039-59995835f73x",
             "TWR_customer_service_report": "????",
+	    "subset_msg_id": "1102",
+            "type": "instrument",
+            "platform": "platform"
+        }
+    },
+    {
+        "nc_var_name": "instrument_adcp",
+        "type": "i4",
+        "attrs": {
+            "serial_number": "???",
+            "make_model": "???",
+            "OOI_series": "",
+            "long_name": "Acoustic Doppler Current Profiler",
+            "calibration_date": "???",
+            "comment": "none",
+            "factory_calibrated": "???",
+            "calibration_report": "????",
+            "calibration_directory_url": "???",
+            "TWR_customer_service_report": "????",
+	    "subset_msg_id": "1141",
             "type": "instrument",
             "platform": "platform"
         }
@@ -140,140 +166,15 @@
         "attrs": {
             "serial_number": "???",
             "make_model": "NMEA-183",
-            "OOI_series": "NMEA-183",
-            "long_name": "NMEA GPS-183 sensor",
-            "calibration_date": "2021-03-31T07:00:00Z",
+            "OOI_series": "???",
+            "long_name": "???",
+            "calibration_date": "???",
             "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "Nmea-183_NMEA-????_SN_???_Calibration_2021-03-31.pdf",
-            "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/802d2213-990e-49a5-8039-59995835f73x",
+            "factory_calibrated": "???",
+            "calibration_report": "???",
+            "calibration_directory_url": "",
             "TWR_customer_service_report": "????",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvstate",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV state data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvfault",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV fault data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvmotor",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600 Tri-fin motor",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV motor data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvemergencyboard",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600 Emergency board",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV emergency board data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvoilcompensator",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600 oil compensator",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV oil compensator data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvsmartbattery",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600 smart battery",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV smart battery data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
-            "type": "instrument",
-            "platform": "platform"
-        }
-    },
-    {
-        "nc_var_name": "instrument_auvtransmission",
-        "type": "i4",
-        "attrs": {
-            "serial_number": "6264",
-            "make_model": "REMUS 600 transmission",
-            "OOI_series": "CP04MOAS-A6264",
-            "long_name": "AUV digital transmission data",
-            "calibration_date": "2021-03-31T07:00:00Z",
-            "comment": "none",
-            "factory_calibrated": "2021-03-31T07:00:00Z",
-            "calibration_report": "none",
-            "calibration_directory_url": "none",
-            "TWR_customer_service_report": "none",
+	    "subset_msg_id": "1055",
             "type": "instrument",
             "platform": "platform"
         }

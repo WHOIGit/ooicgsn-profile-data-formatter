@@ -1,8 +1,9 @@
 *.pyc
 *.py~
+*.json~
 *.log
 .spyproject/
 .idea/
 __pycache__/
 tests/output/**
-
+.gitignore.swp

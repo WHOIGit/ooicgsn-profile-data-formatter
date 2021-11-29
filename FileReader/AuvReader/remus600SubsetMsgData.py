@@ -213,7 +213,8 @@ class remus600SubsetMsgData(  ) :
                 df = pandas.read_csv(
                     self.dataFile, header=0,
                     names= self.msgTypeFields[self.msgId].split(','))
-                self.cachedData = df
+                #memory issues - do not cache for now
+                #self.cachedData = df
         else:
             df = self.cachedData
 
