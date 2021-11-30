@@ -284,27 +284,42 @@ class remus600Processor( auvProcessor ) :
 
         return currentEast, currentNorth
 
-    def calculateUVVars(self, times, latitudes, longitudes, currents, directions):
+    def calculateUV(self, data, adcpMsgId, minDepth, currentProfile, previousProfile, nextProfile):
         """
-        Computes depth averaged u, v components w/ mean time, lat and lon
-        from ADCP data
-        :param times:
-        :param latitudes:
-        :param longitudes:
-        :param currents:
-        :param directions:
-        :return: t, lat, lon, u, v
+        Computes depth averaged current components w/ mean time, lat and lon
+        :param data:        data object containing all trajectory data
+        :param adcpMsgId:   msg id associated with adcp data
+        :param minDepth:    min depth (m) at which to calculate current
+        :param currentProfile: profile start, end times for profile to compute
+        :param previousProfile: start and end times for preceding profile
+        :param nextProfile: start and end times for succeeding profile
+        :return:            time, lat, lon, u, v
         """
-        # compute mean east and north components of current
+
+        # Get data over the full dive. Either previous profile + current if ascending
+        # or current profile + next if descending
+
+        profileData = data.getDataSliceForMessageId( adcpMsgId, currentProfile[0], currentProfile[1])
+        if profileData['depth'].iloc[0] < profileData['depth'].iloc[-1]:
+            profileData = data.getDataSliceForMessageId(adcpMsgId, currentProfile[0], nextProfile[1])
+        else:
+            profileData = data.getDataSliceForMessageId(adcpMsgId, previousProfile[0], currentProfile[1])
+
+        atDepthData = np.where( profileData['depth'] >= minDepth)
+
+        currents = profileData['averageCurrent'].iloc[atDepthData]
+        directions = profileData['averageDirection'].iloc[atDepthData]
         U, V = self.calculateCurrentComponents( currents, directions )
         u = U.mean()
         v = V.mean()
 
-        # compute mean profile time, lat, lon at that time
-        uvTime, uvLat, uvLon = self.findMidpointTimeLatLon(
-            times, latitudes, longitudes )
+        times = profileData['timestamp'].iloc[atDepthData]
+        latitudes = profileData['latitude'].iloc[atDepthData]
+        longitudes = profileData['longitude'].iloc[atDepthData]
+        uvTime, uvLat, uvLon = self.findMidpointTimeLatLon( times, latitudes, longitudes )
 
         return uvTime, uvLat, uvLon, u, v
+
 
     def findMidpointTimeLatLon(self, times, latitudes, longitudes):
         """

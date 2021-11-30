@@ -145,6 +145,8 @@ class remus600Platform( auvPlatform ) :
             # Establish temp directory for splitting Remus
             # subset files into individual messages (instruments)
 
+            logging.debug( 'Processing ' + dataFile )
+
             with tempfile.TemporaryDirectory() as tempPath:
 
                 # read in the subset data file
@@ -168,8 +170,9 @@ class remus600Platform( auvPlatform ) :
                 profileId = 1
                 for profileBounds in allProfileBounds:
 
+                    logging.debug( 'Processing profile ' + str(profileId) )
+
                     gpsProfileData = None
-                    currentProfileData = None
 
                     for instrCfg in self.instrumentsCfg:
 
@@ -192,7 +195,7 @@ class remus600Platform( auvPlatform ) :
 
                             # Only process time variant data here
                             if self.sensorsCfg[sensorDef]['dimension'] != 'time':
-                                print("Non-temporal sensor " +
+                                logging.debug("Non-temporal sensor " +
                                       self.sensorsCfg[sensorDef]['nc_var_name'] +
                                       " ignore for now" )
                                 continue
@@ -205,7 +208,7 @@ class remus600Platform( auvPlatform ) :
                                         self.sensorsCfg[sensorDef], 'observation_type', 'measured'):
 
                                     # TODO create output variable
-                                    print( "Output measurement sensor " +
+                                    logging.debug( "Output measurement sensor " +
                                            self.sensorsCfg[sensorDef]['nc_var_name'] +
                                            " for instrument " +
                                            instrCfg['nc_var_name'] )
@@ -214,7 +217,7 @@ class remus600Platform( auvPlatform ) :
 
                                 else:
 
-                                    print( "Output calculated sensor " +
+                                    logging.debug( "Output calculated sensor " +
                                            self.sensorsCfg[sensorDef]['nc_var_name'] +
                                            " for instrument " +
                                            instrCfg['nc_var_name'] )
@@ -253,11 +256,6 @@ class remus600Platform( auvPlatform ) :
                         if remus600Platform.isInstrument( instrCfg, 'instrument_gps'):
                             gpsProfileData = profileData
 
-                        # if current meter, stash data for depth-avgd current vars
-
-                        if remus600Platform.isInstrument( instrCfg, 'instrument_adcp'):
-                            currentProfileData = profileData
-
                     # process non-temporal data (profile and current avgs)
 
                     profileTime, profileLat, profileLon = \
@@ -268,15 +266,40 @@ class remus600Platform( auvPlatform ) :
                             gpsProfileData.get('latitude'),
                             gpsProfileData.get('longitude'))
 
+                    logging.debug( "Profile " + str(profileId) +
+                                   " time " + str(profileTime) +
+                                   " lat " + str(profileLat) +
+                                   " lon " + str(profileLon) )
+
+                    # use adcp data to compute depth avg'd profile
+
+                    adcpCfg = remus600Platform.getInstrumentFromCfg(
+                        self.instrumentsCfg, 'instrument_adcp')
+
+                    # compute over full dive, handle endpoint cases
+
+                    profileIndex = profileId - 1
+                    previousProfileIndex = profileIndex - 1
+                    if previousProfileIndex < 0:
+                        previousProfileIndex = 0
+                    nextProfileIndex = profileIndex + 1
+                    if nextProfileIndex == len(allProfileBounds):
+                        nextProfileIndex = profileIndex
+
                     uv_time, uv_lat, uv_lon, u, v = \
-                        self.dataProcessor.calculateUVVars(
-                            data.timesInMillisecs(
-                                currentProfileData.get('timestamp'),
-                                currentProfileData.get('missionTime')),
-                            currentProfileData.get('latitude'),
-                            currentProfileData.get('longitude'),
-                            currentProfileData.get('averageCurrent'),
-                            currentProfileData.get('averageDirection') )
+                        self.dataProcessor.calculateUV(
+                            data,
+                            int(adcpCfg['attrs']['subset_msg_id'] ),
+                            0.0,
+                            allProfileBounds[ profileIndex ],
+                            allProfileBounds[ previousProfileIndex ],
+                            allProfileBounds[ nextProfileIndex] )
+
+                    logging.debug( "Profile depth avg current, id " + str(profileId) +
+                                   " time " + str(profileTime) +
+                                   " lat " + str(profileLat) +
+                                   " lon " + str(profileLon) +
+                                   " u " + str(u) + " v " + str(v) )
 
                     # process metadata
 
@@ -285,6 +308,8 @@ class remus600Platform( auvPlatform ) :
                     # add config data to output attributes
 
                     # write the profile output file
+
+                    profileId = profileId + 1
 
         return 0
 

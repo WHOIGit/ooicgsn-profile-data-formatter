@@ -2,10 +2,10 @@ import legacy.gliderdac.ooidac.constants as lgoc
 import FileReader.AuvReader.remusConstants as farc
 
 LOG_HEADER_FORMAT = ('%(levelname)s:%(module)s: [line %(lineno)d]'
-                     '\n%(message)s')
+                     '   %(message)s')
 
 LOG_PROCESSING_FORMAT = ('    %(levelname)s:%(module)s: [line %(lineno)d]'
-                         '\n        %(message)s')
+                         '        %(message)s')
 
 SUPPORTED_PLATFORMS = [ 'Slocum Glider 2.0', 'Remus 600 AUV' ]
 

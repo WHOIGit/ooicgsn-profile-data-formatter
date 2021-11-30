@@ -21,7 +21,7 @@ class remus600SubsetData(  ) :
         # Use temp output path to split AUV msg data
         self._tempPath = '/tmp'
 
-        # maintain map from message id to remus600SubsetMsg object
+        # maintain map from message id to remus600SubsetMsgData object
         self._msgData = {}
 
     @property
