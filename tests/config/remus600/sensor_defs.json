@@ -25,7 +25,7 @@
         "dimension": null,
         "type": "i4",
         "attrs": {
-	    "_FillValue": NaN,
+	    "_FillValue": -999,
 	    "comment": "Remus 600 AUV",
 	    "type": "platform",
             "instrument": "instrument_ctd, instrument_flbbcd, instrument_par, instrument_oxygen, instrument_suna, instrument_sonar, instrument_adcp"
@@ -126,8 +126,8 @@
             "OOI_data_product_name": "CONDWAT",
             "OOI_data_level": "L1a",
             "standard_name": "sea_water_electrical_conductivity",
-            "units": "S m-1",
-            "valid_max": 10.0,
+            "units": "mS cm-1",
+            "valid_max": 100.0,
             "valid_min": 0.0
         }
     },
@@ -262,7 +262,7 @@
             "instrument": "instrument_flbbcd",
 	    "subset_field": "parameter6",
             "long_name": "Chlorophyll A concentration",
-            "observation_type": "measured",
+            "observation_type": "calculated",
             "OOI_data_product_name": "",
             "OOI_data_level": "L1a",
             "platform": "platform",
@@ -285,7 +285,7 @@
             "instrument": "instrument_flbbcd",
 	    "subset_field": "parameter9",
             "long_name": "Chromophoric dissolved organic matter",
-            "observation_type": "measured",
+            "observation_type": "calculated",
             "OOI_data_product_name": "",
             "OOI_data_level": "L1a",
             "platform": "platform",
@@ -317,7 +317,9 @@
             "standard_name": "downwelling_photosynthetic_photon_spherical_irradiance_in_sea_water",
             "units": "umol m-2 s-1",
             "valid_max": 6000.0,
-            "valid_min": 0.0
+            "valid_min": 0.0,
+	    "calibration_dark_offset": 0.0,
+	    "calibration_scale_factor": 1.0
         }
     },
     "o2_oxygen": {
@@ -328,7 +330,7 @@
             "_FillValue": NaN,
             "accuracy": " ",
             "ancillary_variables": "dissolved_oxygen_qc",
-            "instrument": "o2_oxygen_saturation",
+            "instrument": "instrument_oxygen",
 	    "subset_field": "calculatedConcentration",
             "long_name": "Dissolved Oxygen Concentration",
             "observation_type": "calculated",
@@ -352,7 +354,7 @@
             "accuracy": " ",
             "ancillary_variables": "dissolved_nitrate_qc",
             "instrument": "instrument_suna",
-	    "subset_field": "nitrate_concentration",
+	    "subset_field": "nitrateConcentration",
             "long_name": "Dissolved Nitrate Concentration",
             "observation_type": "measured",
             "OOI_data_product_name": "?",
@@ -367,7 +369,7 @@
         }
     },
     "suna_nitrogen": {
-        "nc_var_name": "nitrogen_in_nitrate",
+        "nc_var_name": "nitrogenInNitrate",
         "dimension": "time",
         "type": "f8",
         "attrs": {
@@ -409,7 +411,7 @@
             "standard_name": "eastward_sea_water_velocity",
             "units": "m s-1",
             "valid_max": 20.0,
-            "valid_min": 0.0
+            "valid_min": -20.0
         }
     },
     "adcp_current_north": {
@@ -432,7 +434,7 @@
             "standard_name": "northward_sea_water_velocity",
             "units": "m s-1",
             "valid_max": 20.0,
-            "valid_min": 0.0
+            "valid_min": -200.0
         }
     },
     "sonar_pitch": {

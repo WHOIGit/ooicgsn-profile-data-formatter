@@ -1,9 +1,6 @@
 """
 class: remusXYProcessor
 
-*** TODO  Need to interpolate GPS data to 1 second cadence
-          It is 1 sec while surfaced w/ big gaps between
-
 description:
 
 history:
@@ -11,11 +8,12 @@ history:
 """
 import logging
 import numpy as np
+import numexpr as ne
 from pandas import DataFrame, Series
 from scipy import signal
 from DataProcessor.AuvProcessor.auvProcessor import auvProcessor
 from common.constants import OCEAN_DEPTH_M
-from gsw import SP_from_C, SA_from_SP, CT_from_t, rho, z_from_p
+from gsw import SP_from_C, SA_from_SP, CT_from_t, rho, z_from_p, p_from_z
 
 
 class remus600Processor( auvProcessor ) :
@@ -222,25 +220,81 @@ class remus600Processor( auvProcessor ) :
         return DataFrame( filledGpsData )
 
 
-    def processOxygenData(self, rawO2Concentration, salinity):
+    def processOxygenData(self, rawO2Concentration, salinity, depth, temp, lat, lon, pref=0):
         """
-        TBD: OPTA oxygen data may need processing
-        :param o2data:
-        :return:
+        Note:
+        This salinity correction was swiped directly from OOI CI processing functions in:
+        https://github.com/oceanobservatories/ion-functions/blob/master/ion_functions/data/do2_functions.py.
+        If anything else there is used, that package should be made a dependency and this function
+        replaced with a call to it. (Too many nested dependencies of the ion package that are not
+        required by this function alone to justify at this time.)
+
+        :param rawO2Concentration - uncorrected O2 (uM)
+        :param salinity - practical salinity
+        :param depth - depth (m)
+        :param temp - temperature (deg C)
+        :param lat - latitude (deg)
+        :param lon - longitude (deg)
+        :param pref=0     - pressure reference, default to 0
+        :return: correctedO2 - (uM)
+
+        Implemented by:
+            2013-04-26: Stuart Pearce. Initial Code.
+            2015-08-04: Russell Desiderio. Added Garcia-Gordon reference.
+        References:
+            OOI (2012). Data Product Specification for Oxygen Concentration
+                from "Stable" Instruments. Document Control Number
+                1341-00520. https://alfresco.oceanobservatories.org/ (See:
+                Company Home >> OOI >> Controlled >> 1000 System Level
+                >> 1341-00520_Data_Product_SPEC_DOCONCS_OOI.pdf)
+            "Oxygen solubility in seawater: Better fitting equations", 1992,
+            Garcia, H.E. and Gordon, L.I. Limnol. Oceanogr. 37(6) 1307-1312.
+            Table 1, 5th column.
         """
 
-        # TBD determine processing needed
-        return rawO2Concentration
+        # depth to pressure
+        pressure = p_from_z( -depth , lat)
 
-    def processPARData(self, temperature, depth, supplyVoltage, sensorVoltage):
+        # density calculation from GSW toolbox
+        SA = SA_from_SP(salinity, pressure, lon, lat)
+        CT = CT_from_t(SA, temp, pressure)
+        pdens = rho(SA, CT, pref)  # potential referenced to p=0
+
+        # Convert from volume to mass units:
+        DO = ne.evaluate('1000*rawO2Concentration/pdens')
+
+        # Pressure correction:
+        DO = ne.evaluate('(1 + (0.032*pressure)/1000) * DO')
+
+        # Salinity correction (Garcia and Gordon, 1992, combined fit):
+        S0 = 0
+        ts = ne.evaluate('log((298.15-temp)/(273.15+temp))')
+        B0 = -6.24097e-3
+        B1 = -6.93498e-3
+        B2 = -6.90358e-3
+        B3 = -4.29155e-3
+        C0 = -3.11680e-7
+        Bts = ne.evaluate('B0 + B1*ts + B2*ts**2 + B3*ts**3')
+        DO = ne.evaluate('exp((salinity-S0)*Bts + C0*(salinity**2-S0**2)) * DO')
+
+        # convert back to volume
+        DO = ne.evaluate('DO*pdens/1000')
+
+        return DO
+
+    def processPARData(self, sensorVoltage, calibratedDarkOffset, calibratedScaleFactor):
         """
-        TBD PAR data may need calibrations and calculations
-        :param parData:
-        :return:
+        PAR data needs calculation from voltage using calibration constants
+        :param sensorVoltage: output by Biospherical 2150
+        :param calibratedDarkOffset - in sensor_defs.json from calibration certificate
+        :param calibratedScaleFactor - in sensor_defs.json from calibration certificate
+        :return: calculatedPar (umol m-2 s-1)
         """
 
-        #TBD determine processing needed
-        return np.zeros(len(sensorVoltage))
+        # taken from legacy/ooidac/processing.py recalc_par(), same instrument
+        calculatedPar = (sensorVoltage - calibratedDarkOffset) / calibratedScaleFactor
+
+        return calculatedPar
 
     def calculateDensity(self, salinity, temperature, pressure, latitude, longitude):
         """Calculates density given practical salinity, temperature, pressure, latitude,
@@ -336,3 +390,4 @@ class remus600Processor( auvProcessor ) :
         midpointLon = longitudes[ timeIndex ]
 
         return midpointTime, midpointLat, midpointLon
+

@@ -1,10 +1,8 @@
 """
 class: remus600Platform
 
-*** TODO  Need to interpolate GPS data to 1 second cadence
-          It is 1 sec while surfaced w/ big gaps between
-
-description:
+description: Driver class for translating Remus 600 Subset data file data
+into NetCDF files for import into GliderDac repository
 
 history:
 09/21/2021 ppw created
@@ -20,6 +18,8 @@ import FileReader.AuvReader.remus600SubsetMsgData as r600msgdata
 import os
 import logging
 import json
+import datetime
+import pandas
 
 class remus600Platform( auvPlatform ) :
 
@@ -40,21 +40,29 @@ class remus600Platform( auvPlatform ) :
 
 
     def isValidFile(thePath, theFile ):
+        """
+        Verifies validity and existence of theFile at thePath
+        :param thePath
+        :param theFile:
+        :return: True or False
+        """
 
         ret = True
         if not os.path.isfile( os.path.join( thePath, theFile) ):
             logging.error(
-                'Configuration file {:s}not found at {:s}'.format(
+                'Expected file {:s} not found at {:s}'.format(
                     theFile, thePath ) )
             ret = False
         return ret
 
 
     def validateSettings( self ):
-
-        # validate existence of config files
-        # REMUS 600 requires deployment, global_attributes,
-        # instruments and sensor_defs as json format config files
+        """
+        validate existence of config files
+        REMUS 600 requires deployment, global_attributes,
+        instruments and sensor_defs as json format config files
+        :return: 0 - valid, -1 - invalid
+        """
 
         ret = remus600Platform.isValidFile( self.cfgPath, 'deployment.json' )
         ret = ret and remus600Platform.isValidFile( self.cfgPath, 'global_attributes.json' )
@@ -65,15 +73,42 @@ class remus600Platform( auvPlatform ) :
         if ret:
             return 0
         else:
+            logging.error('Missing required configuration file(s)')
             return -1
 
 
     def getInstrumentFromCfg(instrumentsCfg, instrumentName):
+        """
+        Search instrumentCfg dictionary for instrument with field
+        nc_var_name set to instrumentName
+        :param instrumentCfg
+        :param instrumentName:
+        :return: instr (dictionary), else None
+        """
 
         for instr in instrumentsCfg:
-            if instr['nc_var_name'] == instrumentName:
-                return instr
+            if 'nc_var_name' in instr:
+                if instr['nc_var_name'] == instrumentName:
+                    return instr
 
+        logging.warning( 'No configuration found for instrument ' + instrumentName )
+        return None
+
+    def getSensorDefFromCfg(sensorCfg, sensorName):
+        """
+        Finds sensor in sensorCfg (dictionary) having
+        nc_var_name set to sensorName
+        :param sensorCfg
+        :param sensorName:
+        :return: sensor (dictionary), else None
+        """
+
+        for sensor, sensorAttrs in sensorCfg.items():
+            if 'nc_var_name' in sensorAttrs:
+                if sensorAttrs['nc_var_name'] == sensorName:
+                    return sensorAttrs
+
+        logging.warning( 'No configuration found for sensor ' + sensorName )
         return None
 
     def useCtdDataToComputeProfiles(self, data):
@@ -91,9 +126,19 @@ class remus600Platform( auvPlatform ) :
         allProfileBounds = self.dataProcessor.computeProfiles(
             ctdData, "timestamp", "missionTime", "depth")
 
+        if allProfileBounds is None or len(allProfileBounds) == 0:
+            logging.warning('No valid profiles found in data')
+
         return allProfileBounds
 
     def sensorAttrMatches(sensorDef, attrName, match):
+        """
+        Determines if sensorDef dictionary has an attribute named 'attrName'
+        with a value that matches 'match'
+        :param attrName:
+        :param match:
+        :return: True - has matching named attribute, False - does not
+        """
 
         if 'attrs' in sensorDef:
             if attrName in sensorDef['attrs']:
@@ -101,20 +146,43 @@ class remus600Platform( auvPlatform ) :
                     return True
         return False
 
+    def sensorHasAttr(sensorDef, attrName):
+        """
+        Determines if sensorDef has an attribute with the passed name
+        :param sensorDef
+        :param attrName:
+        :return: True - has named attribute, False - does not
+        """
+
+        if 'attrs' in sensorDef:
+            return attrName in sensorDef['attrs']
+
 
     def isInstrument(instrCfg, name ):
+        """
+        Determines if instrCfg list has an item with a key of
+        'nc_var_name' with a value matching 'name'
+        :param instrCfg
+        :param name:
+        :return: True - match, False - no match
+        """
 
-        return ('nc_var_name' in instrCfg and instrCfg['nc_var_name'] == name)
+        for instr in instrCfg:
+            if 'nc_var_name' in instr and instr['nc_var_name'] == name:
+                return True
 
-
-    def isInstrumentSensor( instrCfg, sensorDef ):
-
-        if 'nc_var_name' in instrCfg:
-            return remus600Platform.sensorAttrMatches(
-                sensorDef, 'instrument', instrCfg['nc_var_name'] )
         return False
 
+
     def getDataSlice( dataset, startTime, endTime ):
+        """
+        Slices a Pandas DataFrame having a 'timestamp' column to
+        within the start and end times
+        :param dataset:
+        :param startTime:
+        :param endTime:
+        :return: Pandas DataFrame slice w/i time bounds
+        """
 
         # return data within passed time window
 
@@ -122,7 +190,12 @@ class remus600Platform( auvPlatform ) :
 
         return dataset[ sliceRange ]
 
+
     def setupFormatting(self):
+        """
+        Virtual method for performing setup work prior to formatting data for output
+        :return: None
+        """
 
         # read configuration settings
 
@@ -131,11 +204,23 @@ class remus600Platform( auvPlatform ) :
         self.instrumentsCfg = self.readCfgFile( self.cfgPath, 'instruments.json')
         self.sensorsCfg = self.readCfgFile( self.cfgPath, 'sensor_defs.json')
 
+        # pass settings to output file writer
+
+        self.outputFileWriter.outputPath = self.outputPath
+        self.outputFileWriter.overwriteExistingFiles = self.replaceOutputFiles
+        self.outputFileWriter.outputCompressionLevel = self.outputCompression
+        self.outputFileWriter.writeFormat = self.outputFormat
 
     def FormatData(self ):
+        """
+        For each data file passed, use the configuration settings to drive the
+        generation of one or more output files (1 / profile).
+        :return: 0
+        """
 
         # If debug mode, go no further
         if self.suppressOutput:
+            logging.info('Output suppression indicated, terminating processing')
             return 0
 
         # for each data file
@@ -153,13 +238,13 @@ class remus600Platform( auvPlatform ) :
 
                 data = self.dataFileReader.read( dataFile, tempPath )
 
-                # interpolate gps data to 1 second cadence
-                # Is 1 sec at surface, gaps during dives
+                # Compute 1 sec res. gps data once for whole data file
+                # Gps data is 1 second cadence at surface, gaps during dives.
 
                 gpsCfg = remus600Platform.getInstrumentFromCfg(
                     self.instrumentsCfg, 'instrument_gps' )
-                gpsData = data.getDataForMessageId( int(gpsCfg['attrs']['subset_msg_id'] ))
-                allGpsData = self.dataProcessor.interpolateGpsData( gpsData )
+                gpsData = data.getDataForMessageId( int( gpsCfg['attrs']['subset_msg_id'] ))
+                gpsDataNoGaps = self.dataProcessor.interpolateGpsData( gpsData )
 
                 # compute profile bounds using data from CTD
 
@@ -170,151 +255,464 @@ class remus600Platform( auvPlatform ) :
                 profileId = 1
                 for profileBounds in allProfileBounds:
 
-                    logging.debug( 'Processing profile ' + str(profileId) )
+                    logging.debug('Processing profile ' + str( profileId ))
 
-                    gpsProfileData = None
+                    # Each profile requires a separate output file for GliderDac
+                    # Re-init the output writer for each profile
 
-                    for instrCfg in self.instrumentsCfg:
+                    self.outputFileWriter.resetAll()
+                    self.outputFileWriter.profileId = profileId
+                    self.outputFileWriter.profileStartTime = profileBounds[0]
+                    self.outputFileWriter.profileEndTime = profileBounds[1]
+                    self.outputFileWriter.trajectory = \
+                        self.deploymentCfg['trajectory_name']
+                    self.outputFileWriter.trajectoryDatetime = \
+                        self.deploymentCfg['trajectory_datetime']
+                    self.outputFileWriter.sourceFile = dataFile
 
-                        # get instrument data within the profile time bounds
+                    self.formatProfileData( profileId, profileBounds[0], profileBounds[-1],
+                                            allProfileBounds, data, gpsDataNoGaps )
 
-                        if not remus600Platform.isInstrument( instrCfg, 'instrument_gps'):
+                    # Generate an output file
 
-                            profileData = data.getDataSliceForMessageId(
-                                int( instrCfg['attrs']['subset_msg_id'] ),
-                                profileBounds[0], profileBounds[1] )
-
-                        else:
-                            profileData = remus600Platform.getDataSlice(
-                                allGpsData, profileBounds[0], profileBounds[1] )
-
-                        # find sensor defs (output variables) for this instrument
-                        # for each temporal sensor def, create output variable
-
-                        for sensorDef in self.sensorsCfg:
-
-                            # Only process time variant data here
-                            if self.sensorsCfg[sensorDef]['dimension'] != 'time':
-                                logging.debug("Non-temporal sensor " +
-                                      self.sensorsCfg[sensorDef]['nc_var_name'] +
-                                      " ignore for now" )
-                                continue
-
-                            if remus600Platform.isInstrumentSensor( instrCfg, self.sensorsCfg[sensorDef] ):
-
-                                # measurement sensor data is copied directly
-
-                                if remus600Platform.sensorAttrMatches(
-                                        self.sensorsCfg[sensorDef], 'observation_type', 'measured'):
-
-                                    # TODO create output variable
-                                    logging.debug( "Output measurement sensor " +
-                                           self.sensorsCfg[sensorDef]['nc_var_name'] +
-                                           " for instrument " +
-                                           instrCfg['nc_var_name'] )
-
-                                # calculated sensor variables require processing
-
-                                else:
-
-                                    logging.debug( "Output calculated sensor " +
-                                           self.sensorsCfg[sensorDef]['nc_var_name'] +
-                                           " for instrument " +
-                                           instrCfg['nc_var_name'] )
-
-                                    if self.sensorsCfg[sensorDef]['nc_var_name'] == 'density':
-                                        density = self.dataProcessor.calculateDensity(
-                                            profileData['salinity'],
-                                            profileData['temperature'],
-                                            profileData['pressure'],
-                                            profileData['latitude'],
-                                            profileData['longitude'] )
-
-                                    elif self.sensorsCfg[sensorDef]['nc_var_name'] == 'PAR':
-                                        par = self.dataProcessor.processPARData(
-                                            profileData['temperature'],
-                                            profileData['depth'],
-                                            profileData['supplyVoltage'],
-                                            profileData['sensorVoltage'] )
-
-                                    elif self.sensorsCfg[sensorDef]['nc_var_name'] == 'dissolved_oxygen':
-                                        o2 = self.dataProcessor.processOxygenData(
-                                            profileData['calculatedConcentration'],
-                                            profileData['salinity'] )
-
-                                    # handles both east, north components
-                                    elif self.sensorsCfg[sensorDef]['nc_var_name'] == 'current_eastward':
-                                        u, v = self.dataProcessor.calculateCurrentComponents(
-                                            profileData['averageCurrent'],
-                                            profileData['averageDirection'] )
-
-                                    # TODO create output variable
-                                    pass
-
-                        # if gps, cache data for profile avg'd vars
-
-                        if remus600Platform.isInstrument( instrCfg, 'instrument_gps'):
-                            gpsProfileData = profileData
-
-                    # process non-temporal data (profile and current avgs)
-
-                    profileTime, profileLat, profileLon = \
-                        self.dataProcessor.findMidpointTimeLatLon(
-                            data.timesInMillisecs(
-                                gpsProfileData.get('timestamp'),
-                                gpsProfileData.get('missionTime')),
-                            gpsProfileData.get('latitude'),
-                            gpsProfileData.get('longitude'))
-
-                    logging.debug( "Profile " + str(profileId) +
-                                   " time " + str(profileTime) +
-                                   " lat " + str(profileLat) +
-                                   " lon " + str(profileLon) )
-
-                    # use adcp data to compute depth avg'd profile
-
-                    adcpCfg = remus600Platform.getInstrumentFromCfg(
-                        self.instrumentsCfg, 'instrument_adcp')
-
-                    # compute over full dive, handle endpoint cases
-
-                    profileIndex = profileId - 1
-                    previousProfileIndex = profileIndex - 1
-                    if previousProfileIndex < 0:
-                        previousProfileIndex = 0
-                    nextProfileIndex = profileIndex + 1
-                    if nextProfileIndex == len(allProfileBounds):
-                        nextProfileIndex = profileIndex
-
-                    uv_time, uv_lat, uv_lon, u, v = \
-                        self.dataProcessor.calculateUV(
-                            data,
-                            int(adcpCfg['attrs']['subset_msg_id'] ),
-                            0.0,
-                            allProfileBounds[ profileIndex ],
-                            allProfileBounds[ previousProfileIndex ],
-                            allProfileBounds[ nextProfileIndex] )
-
-                    logging.debug( "Profile depth avg current, id " + str(profileId) +
-                                   " time " + str(profileTime) +
-                                   " lat " + str(profileLat) +
-                                   " lon " + str(profileLon) +
-                                   " u " + str(u) + " v " + str(v) )
-
-                    # process metadata
-
-                    # add profile data to output variables
-
-                    # add config data to output attributes
-
-                    # write the profile output file
+                    self.outputFileWriter.setupOutput()
+                    self.outputFileWriter.writeOutput()
+                    self.outputFileWriter.cleanupOutput()
 
                     profileId = profileId + 1
 
         return 0
 
-    # abstract, implement in subclass
     def cleanupFormatting(self):
+        """
+        Virtual method for performing post data formatting cleanup activities
+        :return: 0
+        """
 
-        #TODO
         return 0
+
+    def formatProfileData( self, profileId, profileStartTime,
+                           profileEndTime, allProfileBounds, data, gpsData ):
+        """
+        Generate the output attributes and variables, then write output file for one profile
+        :param profileId:
+        :param profileStartTime:
+        :param profileEndTime:
+        :param allProfileBounds:
+        :param data:
+        :param gpsData:
+        :return: 0
+        """
+
+        # Add time invariant attributes and vars
+
+        self.formatGlobalAttributes( profileId )
+        self.formatInstrumentVars()
+
+        # Perform any custom variable calculations before creating profile variables
+
+        calculatedVars = self.computeCalculatedVars(
+            profileId, profileStartTime, profileEndTime,
+            allProfileBounds, data, gpsData )
+
+        # Create profile variables
+
+        for sensorName, sensorDef in self.sensorsCfg.items():
+
+            dimension = sensorDef.get('dimension')
+            if dimension is not None and dimension == "time":
+
+                # get data for sensor's instrument within profile bounds
+
+                profileData = self.getProfileData( sensorDef, data, gpsData,
+                                                   profileStartTime, profileEndTime )
+
+                # combine time fields to get time at finest available resolution
+
+                dataTimesMs = data.timesInMillisecs( profileData.get('timestamp'),
+                                                     profileData.get('missionTime') )
+
+            # use profile data directly for measured sensors
+
+            if remus600Platform.sensorAttrMatches( sensorDef, 'observation_type', 'measured'):
+
+                self.formatMeasuredVar( sensorDef, profileData, dataTimesMs )
+
+            # use calculated data for calculated sensors
+
+            elif remus600Platform.sensorAttrMatches( sensorDef, 'observation_type', 'calculated'):
+
+                self.formatCalculatedVar( sensorDef, calculatedVars, dataTimesMs )
+
+            # profile id is an outlier informational var with a value
+
+            elif sensorName == 'profile_id':
+
+                self.formatInformationalVar( sensorDef, profileId )
+
+            # some entries in sensor defs require no data (informational only)
+
+            else:
+                self.formatInformationalVar( sensorDef, None )
+
+        return 0
+
+
+    def computeCalculatedVars( self, profileId, profileStartTime, profileEndTime,
+                               allProfileBounds, data, gpsData):
+        """
+        Custom calculations and calibrations for all supported sensors and GliderDac
+        output parameters. The current list includes profile avg time, latitude and longitude;
+        depth averaged current time, latitude longitude, current_north and current east,
+        as required by the GliderDac. The following are calculated if the sensor
+        is present in the configured sensor defs: density, irradiance, dissolved oxygen,
+        current north and current east.
+
+        :param profileStartTime:
+        :param profileEndTime:
+        :param data:
+        :param gpsData:
+        :return: dictionary of calculated vars: { 'varname': {} }
+        """
+
+        calculatedVars = {}
+
+        #
+        # current components (north, east)
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'current_eastward' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime)
+            currentEast, currentNorth = self.dataProcessor.calculateCurrentComponents(
+                instrData['averageCurrent'], instrData['averageDirection'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime'))
+            calculatedVars['current_eastward'] = {'values': currentEast, 'times': dataTimesMs}
+            calculatedVars['current_northward'] = {'values': currentNorth, 'times': dataTimesMs}
+        else:
+            logging.warning('Missing sensor current_eastward in sensor_defs config,' +
+                            ' required for current calculations')
+
+        #
+        # Profile avg time, latitude, longitude
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'profile_time' )
+        if sensorDef:
+            profileData = remus600Platform.getDataSlice( gpsData, profileStartTime, profileEndTime )
+
+            profileTime, profileLat, profileLon = self.dataProcessor.findMidpointTimeLatLon(
+                profileData.get('timestamp'), profileData.get('latitude'), profileData.get('longitude'))
+
+            calculatedVars['profile_time'] = {'values': profileTime, 'times': None }
+            calculatedVars['profile_lat'] = {'values': profileLat, 'times': None }
+            calculatedVars['profile_lon'] = {'values': profileLon, 'times': None }
+        else:
+            logging.warning('Missing sensor profile_time in sensor_defs config,' +
+                            ' required for profile calculations')
+
+        #
+        # Depth avg current time, lat, lon, east current, north current
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'time_uv' )
+        if sensorDef:
+            adcpData = self.getProfileData( sensorDef, data, gpsData,
+                profileStartTime, profileEndTime)
+
+            # compute over full dive (may precede or follow profile),
+            # handle endpoint cases
+
+            profileIndex = profileId - 1
+            previousProfileIndex = profileIndex - 1
+            if previousProfileIndex < 0:
+                previousProfileIndex = 0
+            nextProfileIndex = profileIndex + 1
+            if nextProfileIndex == len( allProfileBounds ):
+                nextProfileIndex = profileIndex
+
+            adcpCfg = remus600Platform.getInstrumentFromCfg(
+                    self.instrumentsCfg, sensorDef['attrs']['instrument'])
+
+            uvTime, uvLat, uvLon, u, v = self.dataProcessor.calculateUV(
+                data, int( adcpCfg['attrs']['subset_msg_id'] ), 0.0,
+                allProfileBounds[ profileIndex ],
+                allProfileBounds[ previousProfileIndex ],
+                allProfileBounds[ nextProfileIndex])
+
+            calculatedVars['time_uv'] = {'values': uvTime, 'times': None }
+            calculatedVars['lat_uv'] = {'values': uvLat, 'times': None }
+            calculatedVars['lon_uv'] = {'values': uvLon, 'times': None }
+            calculatedVars['u'] = {'values': u, 'times': None }
+            calculatedVars['v'] = {'values': v, 'times': None }
+        else:
+            logging.warning('Missing sensor time_uv in sensor_defs config,' +
+                            ' required for depth-avg current calculations')
+
+        #
+        # density
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg(self.sensorsCfg, 'density' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime )
+            density = self.dataProcessor.calculateDensity(
+                instrData['salinity'], instrData['temperature'], instrData['pressure'],
+                instrData['latitude'], instrData['longitude'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars['density'] = { 'values': density, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor density in sensor_defs config,' +
+                            ' required for density calculations')
+
+        #
+        # irradiance
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'PAR' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime )
+            par = self.dataProcessor.processPARData(
+                instrData['sensorVoltage'],
+                sensorDef['attrs']['calibration_dark_offset'],
+                sensorDef['attrs']['calibration_scale_factor'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars['PAR'] = { 'values': par, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor PAR in sensor_defs config,' +
+                            ' required for irradiance calculations')
+
+        #
+        # dissolved oxygen
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'dissolved_oxygen' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime )
+            o2 = self.dataProcessor.processOxygenData(
+                instrData['concentration'], instrData['salinity'],
+                instrData['depth'], instrData['temperature'],
+                instrData['latitude'], instrData['longitude'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars['dissolved_oxygen'] = { 'values': o2, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor dissolved_oxygen in sensor_defs config,' +
+                            ' required for oxygen calculations')
+
+        #
+        # Chl_a, CDOM - not strictly calculated, more accurately pre-processed, using
+        # equaion: value = m * raw + b, where m, b, raw from data file.
+        #
+
+        coeffData = data.getDataForMessageId( 1117 )
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'chlorophyll_a' )
+        if sensorDef:
+            rawData = self.getProfileData( sensorDef, data, gpsData,
+                  profileStartTime, profileEndTime )
+            coeffs = coeffData[ coeffData.parameterName == 'Chlorophyll A' ]
+            if coeffs is not None:
+                mx = coeffs[ 'mx'].iat[0]
+                b = coeffs['b'].iat[0]
+            else:
+                logging.warning('Chlorophyll_a coefficients not found, values invalid')
+                mx = 1.0
+                b = 0.0
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                  profileStartTime, profileEndTime )
+            chlaData = mx * instrData[ sensorDef['attrs']['subset_field'] ] + b
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars['chlorophyll_a'] = { 'values': chlaData, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor chlorophyll_a in sensor_defs config,' +
+                            ' required for chlorophyll calculations')
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'cdom' )
+        if sensorDef:
+            coeffs = coeffData[ coeffData.parameterName == 'CDOM' ]
+            if coeffs is not None:
+                mx = coeffs[ 'mx'].iat[0]
+                b = coeffs['b'].iat[0]
+            else:
+                logging.warning('CDOM coefficients not found, values invalid')
+                mx = 1.0
+                b = 0.0
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                  profileStartTime, profileEndTime )
+
+            # ToDo: last col comes back as string due to bad values. Why???
+
+            cdomData = pandas.to_numeric(
+                instrData[ sensorDef['attrs']['subset_field'] ], errors='coerce')
+
+            cdomData = mx * cdomData + b
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars['cdom'] = { 'values': cdomData, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor CDOM in sensor_defs config,' +
+                            ' required for CDOM calculations')
+
+        return calculatedVars
+
+    def getProfileData( self, sensorDef, data, gpsData, profileStartTime, profileEndTime):
+        """
+        If a sensor has an associated instrument, returns the data for that instrument
+        that falls within the profile time bounds. If the instrument is GPS, the data
+        is retrieved from the previously recomputed 1 second resolution gps cache instead.
+        :param sensorDef:
+        :param data:
+        :param gpsData:
+        :param profileStartTime:
+        :param profileEndTime:
+        :return: data (DataFrame) within the profile time bounds
+        """
+
+        profileData = None
+
+        if remus600Platform.sensorHasAttr(sensorDef, 'instrument'):
+
+            # Get instrument data within the profile time bounds
+            # Read input data unless gps, which was recomputed at 1 sec cadence
+
+            instrCfg = remus600Platform.getInstrumentFromCfg(
+                self.instrumentsCfg, sensorDef['attrs']['instrument'] )
+
+            if instrCfg['nc_var_name'] != 'instrument_gps':
+
+                profileData = data.getDataSliceForMessageId(
+                    int( instrCfg['attrs']['subset_msg_id'] ),
+                    profileStartTime, profileEndTime )
+
+            else:
+                profileData = remus600Platform.getDataSlice(
+                    gpsData, profileStartTime, profileEndTime )
+
+        return profileData
+
+
+    def formatGlobalAttributes( self, profileId ):
+        """
+        Create output attributes for all configured global attributes
+        :return: None
+        """
+
+        # Create output attributes for all entries in global_attributes configuration
+
+        for name, value in self.globalsCfg.items():
+            self.outputFileWriter.addGlobalAttr( name, value )
+
+        # Some data and attributes found in deployment cfg
+
+        trajectoryName = self.deploymentCfg['trajectory_name']
+        trajectoryDateTime = self.deploymentCfg['trajectory_datetime']
+        vehicle = self.deploymentCfg['glider']
+        if 'global_attributes' in self.deploymentCfg:
+            comment = self.deploymentCfg['global_attributes']['comment']
+            deploymentNumber = self.deploymentCfg['global_attributes']['deployment_number']
+            wmoId = self.deploymentCfg['global_attributes']['wmo_id']
+        else:
+            comment = " "
+            deploymentNumber = " "
+            wmoId = " "
+
+        self.outputFileWriter.addGlobalAttr( 'comment', comment )
+        self.outputFileWriter.addGlobalAttr( 'id', trajectoryName + "_" + str(profileId) )
+        self.outputFileWriter.addGlobalAttr( 'title', trajectoryName )
+        self.outputFileWriter.addGlobalAttr('wmo_id', wmoId )
+
+        nowUtc = datetime.datetime.utcnow()
+        nowUtcString = nowUtc.strftime('%Y-%m-%dT%h:%m:%sZ')
+        self.outputFileWriter.addGlobalAttr('history', nowUtcString + ': ./profileDataFormatter.py')
+
+        self.outputFileWriter.addGlobalAttr('date_created', nowUtcString )
+        self.outputFileWriter.addGlobalAttr('date_modified', nowUtcString )
+        self.outputFileWriter.addGlobalAttr('date_issued', nowUtcString )
+
+
+    def formatInstrumentVars( self ):
+        """
+        Create an output variable for each instrument in instrument configuration
+        :return: None
+        """
+
+        # Create an output variable for each instrument
+
+        for instrCfg in self.instrumentsCfg:
+            self.outputFileWriter.addVariable(
+                instrCfg["nc_var_name"], instrCfg["type"],
+                None, instrCfg['attrs'], 0, None)
+
+
+    def formatMeasuredVar(self, sensorDef, profileData, profileTimes):
+        """
+        Create an output variable for a measured sensor definition
+        :param sensorDef:
+        :param profileData:
+        :param profileTimes:
+        :return: None
+        """
+
+        self.outputFileWriter.addVariable(
+            sensorDef['nc_var_name'],
+            sensorDef['type'],
+            sensorDef['dimension'],
+            sensorDef['attrs'],
+            profileData[sensorDef['attrs']['subset_field']],
+            profileTimes )
+
+    def formatCalculatedVar( self, sensorDef, calculatedData, profileTimes ):
+        """
+        Create an output variable for a calculated sensor def and calculation results
+        :param sensorDef:
+        :param calculatedData:
+        :param profileTimes:
+        :return: None
+        """
+
+        # Find calculated value(s) for passed sensor
+
+        if sensorDef['nc_var_name'] in calculatedData:
+            self.outputFileWriter.addVariable(
+                sensorDef['nc_var_name'],
+                sensorDef['type'],
+                sensorDef['dimension'],
+                sensorDef['attrs'],
+                calculatedData[ sensorDef['nc_var_name'] ]['values'],
+                calculatedData[ sensorDef['nc_var_name'] ]['times'] )
+
+        else:
+            logging.warning('Encountered unexpected calculated sensor: ' +
+                            sensorDef['nc_var_name'] + ' ignored.')
+
+
+    def formatInformationalVar(self, sensorDef, sensorValue ):
+        """
+        Create an output variable for a sensor definition having no data or time dimension
+        :param sensorDef:
+        :return: None
+        """
+
+        # The "platform" sensor is an outlier, in that there exists
+        # some "platform" attributes within the deployment config
+        # Add those non-duplicates attributes to the attributes
+        # in the "platform" sensor def four output
+
+        sensorAttrs = sensorDef['attrs'].copy()
+        if sensorDef['nc_var_name'] == 'platform':
+            for key, value in self.deploymentCfg['platform'].items():
+                if not key in sensorAttrs:
+                    sensorAttrs[key] = value
+
+        self.outputFileWriter.addVariable(
+            sensorDef['nc_var_name'], sensorDef['type'], None,
+            sensorAttrs, sensorValue, None )

@@ -17,7 +17,7 @@ from MobilePlatform.GliderPlatform.gliderPlatform import gliderPlatform
 from FileReader.jsonCfgReader import jsonCfgReader
 from FileReader.GliderReader.slocum20DataReader import slocum20DataReader
 from DataProcessor.GliderProcessor.slocum20Processor import slocum20Processor
-from FileWriter.NetCDFWriter.dacNetCDFWriter import dacNetCDFWriter
+from FileWriter.NetCDFWriter.dacLegacyNetCDFWriter import dacLegacyNetCDFWriter
 from FileWriter.NetCDFWriter.dataExplorerNetCDFWriter import dataExplorerNetCDFWriter
 from legacy.gliderdac.ooidac.constants import LLAT_SENSORS
 from legacy.gliderdac.dba_file_sorter import sort_function
@@ -54,7 +54,7 @@ class slocum20Platform( gliderPlatform ) :
         self.cfgReader = jsonCfgReader()
         self.dataFileReader = slocum20DataReader()
         self.dataProcessor = slocum20Processor()
-        self.outputFileWriter = dacNetCDFWriter()
+        self.outputFileWriter = dacLegacyNetCDFWriter()
 
         # Any overrides of default file readers/writers/processors goes here
         # (example below, not yet implemented)

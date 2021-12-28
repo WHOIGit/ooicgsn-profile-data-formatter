@@ -19,7 +19,7 @@
         "wmo_id": "???????",
         // mode is required and can only be 'rt' or 'delayed' for
         // real-time and recovered data respectively.
-        "mode": "rt"
+        "mode": "delayed"
     },
     // This platform section become `platform` variable
     // attributes that are relevant to NCEI for archival

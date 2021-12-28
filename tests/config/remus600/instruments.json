@@ -1,7 +1,6 @@
 // Mocked up instrument data for Remus 600
 //
-// ToDo: get actual instrument specifics for OOI 6264 AUV
-//       Do we need AUV msg data: sonar, gps, auv state, etc.?
+// ToDo: Do we need AUV msg data: sonar, gps, auv state, etc.?
 //
 // instruments.json captures metadata specifically about the
 //     the science instruments for the deployment to be processed.
@@ -43,7 +42,7 @@
             "calibration_report": "CTDGV-M_SBE-Remus_SN_6264_Calibration_2021-03-31.pdf",
             "calibration_directory_url": "https://alfresco.oceanobservatories.org/alfresco/n/browse/workspace/SpacesStore/8b3c9aaf-3007-431b-8fd3-167d4204360b",
 	    "subset_msg_id": "1107",
-            "type": "instrument",
+            "type": "platform",
             "platform": "platform"
         }
     },
