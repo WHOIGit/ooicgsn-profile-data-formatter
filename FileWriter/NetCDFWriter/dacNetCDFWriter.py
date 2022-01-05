@@ -19,6 +19,7 @@ class dacNetCDFWriter(netCDFWriter) :
 
         # initialize data structures:
 
+        self._fileName = ""
         self._profileId = 0
         self._profileStartTime = 0.0
         self._profileEndTime = 0.0
@@ -43,6 +44,14 @@ class dacNetCDFWriter(netCDFWriter) :
     @property
     def globalAttrs(self):
         return self._globalAttrs
+
+    @property
+    def fileName(self):
+        return self._fileName
+
+    @fileName.setter
+    def fileName(self, name):
+        self._fileName = name
 
     @property
     def profileId(self):
@@ -98,6 +107,7 @@ class dacNetCDFWriter(netCDFWriter) :
         :return: none
         """
 
+        self.fileName = ""
         self.profileId = 0
         self.profileStartTime = 0.0
         self.profileEndTime = 0.0
@@ -145,10 +155,7 @@ class dacNetCDFWriter(netCDFWriter) :
         """
 
         # Open the netCDF file
-
-        fileName = self.trajectory + "_" + str(self.profileId) + ".nc"
-        filePath = os.path.join( self.outputPath, fileName)
-
+        filePath = os.path.join( self.outputPath, self.fileName)
         if os.path.exists(filePath):
             if self.overwriteExistingFiles == False:
                 logging.warning("File exists, overwrite not selected " + fileName)

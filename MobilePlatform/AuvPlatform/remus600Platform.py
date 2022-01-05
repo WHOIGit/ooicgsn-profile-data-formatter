@@ -12,6 +12,8 @@ from FileReader.jsonCfgReader import jsonCfgReader
 from FileReader.AuvReader.remus600SubsetDataReader import remus600SubsetDataReader
 from DataProcessor.AuvProcessor.remus600Processor import remus600Processor
 from FileWriter.NetCDFWriter.dacNetCDFWriter import dacNetCDFWriter
+from FileWriter.NetCDFWriter.dataExplorerNetCDFWriter import dataExplorerNetCDFWriter
+import common.constants as cc
 import tempfile
 import FileReader.AuvReader.remus600SubsetData as r600data
 import FileReader.AuvReader.remus600SubsetMsgData as r600msgdata
@@ -20,6 +22,7 @@ import logging
 import json
 import datetime
 import pandas
+import numpy as np
 
 class remus600Platform( auvPlatform ) :
 
@@ -31,12 +34,9 @@ class remus600Platform( auvPlatform ) :
         self.dataProcessor = remus600Processor()
         self.outputFileWriter = dacNetCDFWriter()
 
-        # TBD { extract platform specific args here }
+        # ** extract platform specific args here **
 
         # Any overrides of default file readers/writers/processors goes here
-        # (example below, not yet implemented)
-        # if self.targetHost == 'OOI-EXPLORER':
-        #    self.outputFileWriter = FileWriter.NetCDFWriter.dataExplorerNetCDFWriter
 
 
     def isValidFile(thePath, theFile ):
@@ -232,6 +232,8 @@ class remus600Platform( auvPlatform ) :
 
             logging.debug( 'Processing ' + dataFile )
 
+            outputFiles = []
+
             with tempfile.TemporaryDirectory() as tempPath:
 
                 # read in the subset data file
@@ -260,7 +262,14 @@ class remus600Platform( auvPlatform ) :
                     # Each profile requires a separate output file for GliderDac
                     # Re-init the output writer for each profile
 
+                    filename = self.deploymentCfg['glider'] + "_" + \
+                               datetime.datetime.fromtimestamp(
+                                   profileBounds[0] ).strftime('%Y%m%dT%H%M') + "_" + \
+                               self.deploymentCfg['global_attributes']['mode'] + ".nc"
+                    outputFiles.append( filename )
+
                     self.outputFileWriter.resetAll()
+                    self.outputFileWriter.fileName = filename
                     self.outputFileWriter.profileId = profileId
                     self.outputFileWriter.profileStartTime = profileBounds[0]
                     self.outputFileWriter.profileEndTime = profileBounds[1]
@@ -280,6 +289,25 @@ class remus600Platform( auvPlatform ) :
                     self.outputFileWriter.cleanupOutput()
 
                     profileId = profileId + 1
+
+            # If output target is OOI Explorer, feed the output
+            # files formatted for GliderDAC to the OOI Explorer
+            # file writer for reformatting.
+
+            if self.targetHost == cc.OOI_EXPLORER_TARGET:
+                deWriter = dataExplorerNetCDFWriter()
+                deWriter.outputPath = self.outputPath
+                deWriter.overwriteExistingFiles = self.replaceOutputFiles
+                deWriter.outputCompressionLevel = self.outputCompression
+                deWriter.writeFormat = self.outputFormat
+                deWriter.trajectoryName = self.deploymentCfg['trajectory_name']
+                deWriter.trajectoryDateTime = self.deploymentCfg['trajectory_datetime']
+                deWriter.sourceFile = dataFile
+                deWriter.inputFiles = outputFiles
+
+                deWriter.setupOutput()
+                deWriter.writeOutput()
+                deWriter.cleanupOutput()
 
         return 0
 
@@ -507,61 +535,6 @@ class remus600Platform( auvPlatform ) :
             logging.warning('Missing sensor dissolved_oxygen in sensor_defs config,' +
                             ' required for oxygen calculations')
 
-        #
-        # Chl_a, CDOM - not strictly calculated, more accurately pre-processed, using
-        # equaion: value = m * raw + b, where m, b, raw from data file.
-        #
-
-        coeffData = data.getDataForMessageId( 1117 )
-
-        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'chlorophyll_a' )
-        if sensorDef:
-            rawData = self.getProfileData( sensorDef, data, gpsData,
-                  profileStartTime, profileEndTime )
-            coeffs = coeffData[ coeffData.parameterName == 'Chlorophyll A' ]
-            if coeffs is not None:
-                mx = coeffs[ 'mx'].iat[0]
-                b = coeffs['b'].iat[0]
-            else:
-                logging.warning('Chlorophyll_a coefficients not found, values invalid')
-                mx = 1.0
-                b = 0.0
-            instrData = self.getProfileData( sensorDef, data, gpsData,
-                  profileStartTime, profileEndTime )
-            chlaData = mx * instrData[ sensorDef['attrs']['subset_field'] ] + b
-            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
-                                                 instrData.get('missionTime') )
-            calculatedVars['chlorophyll_a'] = { 'values': chlaData, 'times': dataTimesMs }
-        else:
-            logging.warning('Missing sensor chlorophyll_a in sensor_defs config,' +
-                            ' required for chlorophyll calculations')
-
-        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'cdom' )
-        if sensorDef:
-            coeffs = coeffData[ coeffData.parameterName == 'CDOM' ]
-            if coeffs is not None:
-                mx = coeffs[ 'mx'].iat[0]
-                b = coeffs['b'].iat[0]
-            else:
-                logging.warning('CDOM coefficients not found, values invalid')
-                mx = 1.0
-                b = 0.0
-            instrData = self.getProfileData( sensorDef, data, gpsData,
-                  profileStartTime, profileEndTime )
-
-            # ToDo: last col comes back as string due to bad values. Why???
-
-            cdomData = pandas.to_numeric(
-                instrData[ sensorDef['attrs']['subset_field'] ], errors='coerce')
-
-            cdomData = mx * cdomData + b
-            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
-                                                 instrData.get('missionTime') )
-            calculatedVars['cdom'] = { 'values': cdomData, 'times': dataTimesMs }
-        else:
-            logging.warning('Missing sensor CDOM in sensor_defs config,' +
-                            ' required for CDOM calculations')
-
         return calculatedVars
 
     def getProfileData( self, sensorDef, data, gpsData, profileStartTime, profileEndTime):
@@ -670,6 +643,9 @@ class remus600Platform( auvPlatform ) :
             profileData[sensorDef['attrs']['subset_field']],
             profileTimes )
 
+        # Variables need a corresponding quality control indicator variable
+        self.formatQCVar( sensorDef, profileTimes )
+
     def formatCalculatedVar( self, sensorDef, calculatedData, profileTimes ):
         """
         Create an output variable for a calculated sensor def and calculation results
@@ -689,6 +665,9 @@ class remus600Platform( auvPlatform ) :
                 sensorDef['attrs'],
                 calculatedData[ sensorDef['nc_var_name'] ]['values'],
                 calculatedData[ sensorDef['nc_var_name'] ]['times'] )
+
+            # Variables need a corresponding quality control indicator variable
+            self.formatQCVar( sensorDef, calculatedData[ sensorDef['nc_var_name'] ]['times'] )
 
         else:
             logging.warning('Encountered unexpected calculated sensor: ' +
@@ -716,3 +695,41 @@ class remus600Platform( auvPlatform ) :
         self.outputFileWriter.addVariable(
             sensorDef['nc_var_name'], sensorDef['type'], None,
             sensorAttrs, sensorValue, None )
+
+        # Scalar variables need a corresponding quality control indicator variable
+        if remus600Platform.sensorAttrMatches( sensorDef, 'type', 'platform') == False and \
+            remus600Platform.sensorAttrMatches( sensorDef, 'type', 'instrument') == False and \
+            sensorDef['nc_var_name'] not in ['crs', 'profileId' ]:
+               self.formatQCVar( sensorDef, None )
+
+    def formatQCVar(self, sensorDef, qcTimes ):
+        '''
+        Generate a quality control variable for passed sensor.
+        Value zero indicates no quality control performed
+        :param sensorDef:
+        :param qcTimes:
+        :return: None
+        '''
+
+        attrs = { '_FillValue': -127,
+                  'flag_meanings': 'no_qc_performed good_data probably_good_data' +
+                                   ' bad_data_that_are_potentially_correctable' +
+                                   ' bad_data value_changed not_used not_used' +
+                                   ' interpolated_value missing_value',
+                  'flag_values': '0b, 1b, 2b, 3b, 4b, 5b, 6b, 7b, 8b, 9b',
+                  'long_name': sensorDef['nc_var_name'] + ' quality flag',
+                  'valid_max': 9,
+                  'valid_min': 0 }
+
+        if qcTimes is None:
+            values = 0
+        else:
+            values = np.zeros( len( qcTimes ))
+
+        self.outputFileWriter.addVariable(
+            sensorDef['nc_var_name'] + '_qc',
+            'byte',
+            sensorDef['dimension'],
+            attrs,
+            values,
+            qcTimes )

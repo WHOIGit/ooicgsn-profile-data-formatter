@@ -67,3 +67,15 @@ class netCDFWriter( fileWriter ) :
     @nc.setter
     def nc(self, newnc):
         self._nc = newnc
+
+    # abstract, implement in subclass
+    def setupOutput(self):
+        raise NotImplementedError()
+
+    # abstract, implement in subclass
+    def writeOutput(self ):
+        raise NotImplementedError()
+
+    # abstract, implement in subclass
+    def cleanupOutput(self):
+        raise NotImplementedError()

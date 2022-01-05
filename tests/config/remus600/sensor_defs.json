@@ -260,9 +260,9 @@
             "accuracy": " ",
             "ancillary_variables": "flort_chlorophyll_qc",
             "instrument": "instrument_flbbcd",
-	    "subset_field": "parameter6",
+	    "subset_field": "parameter5",
             "long_name": "Chlorophyll A concentration",
-            "observation_type": "calculated",
+            "observation_type": "measured",
             "OOI_data_product_name": "",
             "OOI_data_level": "L1a",
             "platform": "platform",
@@ -283,9 +283,9 @@
             "accuracy": " ",
             "ancillary_variables": "",
             "instrument": "instrument_flbbcd",
-	    "subset_field": "parameter9",
+	    "subset_field": "parameter8",
             "long_name": "Chromophoric dissolved organic matter",
-            "observation_type": "calculated",
+            "observation_type": "measured",
             "OOI_data_product_name": "",
             "OOI_data_level": "L1a",
             "platform": "platform",
@@ -294,7 +294,7 @@
             "standard_name": "",
             "units": "ppb",
             "valid_max": 375,
-            "valid_min": 0.3
+            "valid_min": 0.0
 	}
     },
     "par_calc_irradiance": {
@@ -434,7 +434,7 @@
             "standard_name": "northward_sea_water_velocity",
             "units": "m s-1",
             "valid_max": 20.0,
-            "valid_min": -200.0
+            "valid_min": -20.0
         }
     },
     "sonar_pitch": {

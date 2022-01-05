@@ -7,10 +7,13 @@ LOG_HEADER_FORMAT = ('%(levelname)s:%(module)s: [line %(lineno)d]'
 LOG_PROCESSING_FORMAT = ('    %(levelname)s:%(module)s: [line %(lineno)d]'
                          '        %(message)s')
 
-SUPPORTED_PLATFORMS = [ 'Slocum Glider 2.0', 'Remus 600 AUV' ]
+SLOCUM_20_PLATFORM = 'Slocum Glider 2.0'
+REMUS_600_PLATFORM = 'Remus 600 AUV'
+SUPPORTED_PLATFORMS = [ SLOCUM_20_PLATFORM, REMUS_600_PLATFORM ]
 
-OUTPUT_TARGETS = ['IOOS-DAC',
-                  'OOI-EXPLORER']
+IOOS_DAC_TARGET = 'IOOS-DAC'
+OOI_EXPLORER_TARGET = 'OOI-EXPLORER'
+OUTPUT_TARGETS = [ IOOS_DAC_TARGET, OOI_EXPLORER_TARGET ]
 
 OUTPUT_FORMATS = lgoc.NETCDF_FORMATS
 

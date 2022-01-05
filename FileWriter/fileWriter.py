@@ -29,3 +29,16 @@ class fileWriter( ) :
     @overwriteExistingFiles.setter
     def overwriteExistingFiles(self, overwrite):
         self._overwriteExistingFiles = overwrite
+
+    # abstract, implement in subclass
+    def setupOutput(self):
+        raise NotImplementedError()
+
+    # abstract, implement in subclass
+    def writeOutput(self ):
+        raise NotImplementedError()
+
+    # abstract, implement in subclass
+    def cleanupOutput(self):
+        raise NotImplementedError()
+
