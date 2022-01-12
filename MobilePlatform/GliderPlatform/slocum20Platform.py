@@ -24,7 +24,7 @@ from legacy.gliderdac.dba_file_sorter import sort_function
 from legacy.gliderdac.ooidac.validate import validate_sensors, validate_ngdac_var_names
 from legacy.gliderdac.ooidac.data_classes import DbaData
 from legacy.gliderdac.ooidac.data_checks import check_file_goodness
-from common.constants import LOG_HEADER_FORMAT, LOG_PROCESSING_FORMAT
+import common.constants as cc
 
 class slocum20Platform( gliderPlatform ) :
     """
@@ -57,9 +57,6 @@ class slocum20Platform( gliderPlatform ) :
         self.outputFileWriter = dacLegacyNetCDFWriter()
 
         # Any overrides of default file readers/writers/processors goes here
-        # (example below, not yet implemented)
-        # if self.targetHost == 'OOI-EXPLORER':
-        #    self.outputFileWriter = FileWriter.NetCDFWriter.dataExplorerNetCDFWriter
 
     @property
     def deploymentCfgPath(self):
@@ -293,6 +290,8 @@ class slocum20Platform( gliderPlatform ) :
         :return: 0 success, <0 failure (see log)
         """
 
+        ret = 0
+
         # If debug mode, go no further
         if self.suppressOutput:
             return 0
@@ -316,8 +315,8 @@ class slocum20Platform( gliderPlatform ) :
         self.dataFiles.sort(key=sort_function)
 
         # setup multiple log formatters (for header, data logging)
-        hdrFormat = logging.Formatter( LOG_HEADER_FORMAT )
-        dataFormat = logging.Formatter( LOG_PROCESSING_FORMAT )
+        hdrFormat = logging.Formatter( cc.LOG_HEADER_FORMAT )
+        dataFormat = logging.Formatter( cc.LOG_PROCESSING_FORMAT )
 
         for dataFile in self.dataFiles:
 
@@ -326,6 +325,7 @@ class slocum20Platform( gliderPlatform ) :
 
             if not os.path.isfile( dataFile):
                 logging.error('Invalid dba file specified: {:s}'.format(dataFile))
+                ret = -1
                 continue
 
             logging.info('Processing data file: {:s}'.format(dataFile))
@@ -337,6 +337,7 @@ class slocum20Platform( gliderPlatform ) :
             dba = self.dataFileReader.readIntoDbaData( dataFile )
             if dba is None or dba.N == 0:
                 logging.warning('Skipping empty data file: {:s}'.format(dataFile))
+                ret = -1
                 continue
 
             mission = dba.file_metadata['mission_name'].upper()
@@ -358,9 +359,12 @@ class slocum20Platform( gliderPlatform ) :
             # perform all sensor data calculations and updates
             profiles = self.dataProcessor.processData( dba, scalars, var_processing )
             if profiles is None:
+                logging.warning('No valid profiles found in data file: {:s}, skip processing.'.format(dataFile))
+                ret = -1
                 continue
 
             # write output netcdf files
+            longestSourceFile = ""
             for profile in profiles:
 
                 # Filters out excess data
@@ -381,12 +385,37 @@ class slocum20Platform( gliderPlatform ) :
                     source_dba_files.append(os.path.basename(dataFile))
                     profile_to_data_map.append((out_nc_file, dataFile))
 
+                # Gliders use source file per profile (need longest to dim explorer vars)
+                if len(profile.file_metadata['filename_label']) > len(longestSourceFile):
+                    longestSourceFile = profile.file_metadata['filename_label']
+
             processed_dbas.append(os.path.basename(dataFile))
 
         # change back to non-indented log format (see above)
         logging.getLogger().handlers[0].setFormatter( hdrFormat )
 
-        return 0
+        # if output format is OOI Data Explorer, convert DAC output to OOI
+
+        if self.targetHost == cc.OOI_EXPLORER_TARGET:
+            if len(output_nc_files) > 0:
+                deWriter = dataExplorerNetCDFWriter()
+                deWriter.outputPath = self.outputPath
+                deWriter.overwriteExistingFiles = self.replaceOutputFiles
+                deWriter.outputCompressionLevel = self.outputCompression
+                deWriter.writeFormat = self.outputFormat
+                deWriter.trajectoryName = self.deploymentDefs['trajectory_name']
+                deWriter.trajectoryDateTime = self.deploymentDefs['trajectory_datetime']
+                deWriter.inputFiles = output_nc_files
+                deWriter.sourceFile = longestSourceFile
+
+                deWriter.setupOutput()
+                deWriter.writeOutput()
+                deWriter.cleanupOutput()
+            else:
+                logging.warning("No valid NetCDF files produced, skip coversion to OOI format.")
+                ret = -1
+
+        return ret
 
     # post processing cleanup
     def cleanupFormatting(self):
@@ -406,19 +435,19 @@ class slocum20Platform( gliderPlatform ) :
 
         # Load configured sensor definitions
 
-        self.cfgSensorDefs = self.readCfgFile( self.cfgReader, self.sensorDefsCfgPath )
+        self.cfgSensorDefs = self.readCfgFile( '', self.sensorDefsCfgPath )
 
         # Load configured deployment definitions
 
-        self.deploymentDefs = self.readCfgFile( self.cfgReader, self.deploymentCfgPath )
+        self.deploymentDefs = self.readCfgFile( '', self.deploymentCfgPath )
 
         # Load configured global attributes
 
-        self.globalAttribs = self.readCfgFile( self.cfgReader, self.globalAttributesPath )
+        self.globalAttribs = self.readCfgFile( '', self.globalAttributesPath )
 
         # Load configured instruments
 
-        self.instrumentCfgs = self.readCfgFile( self.cfgReader, self.instrumentsCfgPath )
+        self.instrumentCfgs = self.readCfgFile( '', self.instrumentsCfgPath )
 
     def _validateConfigData(self):
         """

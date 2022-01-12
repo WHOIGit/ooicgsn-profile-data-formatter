@@ -113,55 +113,69 @@ def main( args ) :
     :return: 0: success, -1 processing failure
     """
     ret = 0
+
+    try:
     
-    # Set up logging
-    logging.basicConfig(filename='./profileDataFormatter.log', level= getattr( logging, args.log_level.upper() ))
-    formatter = logging.Formatter( LOG_HEADER_FORMAT )
-    logging.getLogger().handlers[0].setFormatter( formatter )
-    logging.info('----- starting profileDataFormatter -----')
-    logargs = ' '.join(str(k)+":"+str(v) for k, v in vars( args ).items())
-    logging.info( logargs )
+        # Set up logging
+        logging.basicConfig(filename='./profileDataFormatter.log', level= getattr( logging, args.log_level.upper() ))
+        formatter = logging.Formatter( LOG_HEADER_FORMAT )
+        logging.getLogger().handlers[0].setFormatter( formatter )
+        logging.info('----- starting profileDataFormatter -----')
+        logargs = ' '.join(str(k)+":"+str(v) for k, v in vars( args ).items())
+        logging.info( logargs )
 
-    # validate parameters
-    if validateCommonArguments( args ) != 0:
-        return -1
+        # validate parameters
+        if validateCommonArguments( args ) != 0:
+            ret =  -1
 
-    # if data file list contains wildcard(s), expand to list all files
-    dataFilelistWildcardExpansion( args )
+        else:
+            # if data file list contains wildcard(s), expand to list all files
+            dataFilelistWildcardExpansion( args )
+            if args.data_files is None or len(args.data_files) == 0:
+                logging.error("No valid data files found to process")
+                ret = -1
 
-    # Instantiate the desired mobile platform class to process data
-    platform = nameToPlatform( args.mobile_platform )
+            else:
 
-    # Insert cmdline args into platform settings
-    platform.cfgPath = args.config_path
-    platform.dataFiles = args.data_files
-    platform.targetHost = args.target_repository
-    if args.platform_args is not None:
-        cleanString = args.platform_args.replace('\'', "\"")
-        platform.platformArgs = platformArgsStringToDict( cleanString )
-    platform.outputPath = args.output_path
-    platform.replaceOutputFiles = args.clobber
-    platform.outputFormat = args.nc_format
-    platform.outputCompression = args.compression_level
-    platform.suppressOutput = args.suppress_output
+                # Instantiate the desired mobile platform class to process data
+                platform = nameToPlatform( args.mobile_platform )
 
-    # Allow platform to further validate arguments
-    if platform.validateSettings() != 0:
-        return -1
+                # Insert cmdline args into platform settings
+                platform.cfgPath = args.config_path
+                platform.dataFiles = args.data_files
+                platform.targetHost = args.target_repository
+                if args.platform_args is not None:
+                    cleanString = args.platform_args.replace('\'', "\"")
+                    platform.platformArgs = platformArgsStringToDict( cleanString )
+                platform.outputPath = args.output_path
+                platform.replaceOutputFiles = args.clobber
+                platform.outputFormat = args.nc_format
+                platform.outputCompression = args.compression_level
+                platform.suppressOutput = args.suppress_output
 
-    # Perform pre-formatting tasks
-    platform.setupFormatting()
+                # Allow platform to further validate arguments
+                if platform.validateSettings() != 0:
+                    ret =  -1
 
-    # Have platform perform data formatting
-    ret = platform.FormatData()
+                else:
 
-    # Perform post-formatting cleanup tasks
-    platform.cleanupFormatting()
+                    # Perform pre-formatting tasks
+                    platform.setupFormatting()
+
+                    # Have platform perform data formatting
+                    ret = platform.FormatData()
+
+                    # Perform post-formatting cleanup tasks
+                    platform.cleanupFormatting()
+
+    except Exception as e:
+        logging.error( "Uncaught exception: " + str(e))
+        ret = -1
 
     if ret == 0:
-        logging.info('formatting completed successfully')
+        print('formatting completed successfully')
     else:
-        logging.error('formatting ended due to errors')
+        print('Errors encountered, see log file for details')
 
     return ret
 

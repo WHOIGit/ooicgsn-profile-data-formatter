@@ -4,10 +4,16 @@ class: dataExplorerNetCDFWriter
 description: Output file writer/formatter for OOI-Data Explorer compatible
 NetCDF format output files (ie: NetCDF syntax, OOI-Data Explorer content)
 This NetCDF writer piggybacks off the dacNetCDFWriter in that it takes as
-input, one or more netcdf files generated for a single trajectory by that
-class and converts them into a single output netCDF file for the whole
-trajectory, having different dimensions and importable into the OOI
-Data Explorer.
+input, one or more netcdf files representing single profiles of a trajectory
+created using that class and converts them into a single output netCDF file
+representing the whole trajectory. This is implemented this way in order to
+also support Data Explorer output format for Glider data files, which use a
+legacy implementation that would otherwise require an additional formatter.
+
+The input netCDF files use a single dimension, time. The output netCDF file
+utilizes three dimensions: trajectory, profile and observation. The output
+netCDF mimics NetCDF NetCDF files exported from the GliderDAC that are
+directly importable into Data Explorer.
 
 history:
 09/21/2021 ppw created
@@ -31,6 +37,14 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         # internal variables
         self.profileIdList = []
         self.maxObsPerProfile = 0
+
+        # geospatial extent
+        self.lonMin = 361.0
+        self.lonMax = -361.0
+        self.latMin = 91.0
+        self.latMax = -91.0
+        self.depthMin = 99999.0
+        self.depthMax = -1.0
 
     @property
     def trajectoryName(self):
@@ -103,6 +117,15 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         self.nc.createDimension( 'traj_strlen', len(self.trajectoryName) )
         self.nc.createDimension( 'source_file_strlen', len(self.sourceFile) )
 
+        # clear out computed geospatial extent
+
+        self.lonMin = 361.0
+        self.lonMax = -361.0
+        self.latMin = 91.0
+        self.latMax = -91.0
+        self.depthMin = 99999.0
+        self.depthMax = -1.0
+
 
     # virtual method for writing output
     def writeOutput(self ):
@@ -127,7 +150,9 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
 
         self.insertVariableValues()
 
-        pass
+        # Set the trajectory geospatial extent attributes
+
+        self.setGeospatialExtentAttrs()
 
     # virtual method for output cleanup tasks
     def cleanupOutput(self):
@@ -193,8 +218,8 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                 self.nc.setncattr( attrName, dsIn.getncattr( attrName ))
 
             # Create variables corresponding to the trajectory, profile dimensions
-            trajVar = self.nc.createVariable( 'trajectory', 'S1', ('trajectory','traj_strlen',) )
-            trajVar[:] = stringtoarr( self.trajectoryName, len(self.trajectoryName))
+            trajVar = self.nc.createVariable( 'trajectory', 'S1', ('trajectory', 'traj_strlen',) )
+            trajVar[0,:] = stringtoarr( self.trajectoryName, len(self.trajectoryName))
             trajVar.setncattr( '_ChunkSizes', len(self.trajectoryName))
             trajVar.setncattr( '_Encoding', 'ISO-885901')
             trajVar.setncattr( 'cf_role', 'trajectory_id')
@@ -224,14 +249,18 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                     continue
 
                 if inVar.ndim == 0:
-                    # non-dimensional -> (trajectory, profile)
-                    outDims = ( 'trajectory', 'profile',)
+                    if self.isScalarInExplorer( inVar ):
+                        # non-dimensional "scalar" -> ()
+                        outDims = ()
+                    else:
+                        # scalar -> profile specific (trajectory, profile)
+                        outDims = ('trajectory', 'profile',)
                 else:
                     if 'time' in inVar.dimensions:
                         # time -> (trajectory, profile, observation)
                         outDims = ('trajectory', 'profile', 'obs',)
                     else:
-                        # strings -> (trajectory, profile, string)
+                        # strings -> (trajectory, profile, stringlen)
                         outDims = ('trajectory', 'profile', ) + inVar.dimensions
 
                 # _FillValue attribute unique in that it is set on creation
@@ -241,7 +270,6 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                 if "_FillValue" in inVar.ncattrs():
                     fillValue = inVar._FillValue
 
-                print( self.dacVarNameToOoiVarName(inVar.name) )
                 outVar = self.nc.createVariable( self.dacVarNameToOoiVarName(inVar.name),
                                                  inVar.dtype,
                                                  outDims,
@@ -255,6 +283,22 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         else:
             logging.error('No input files found, unable to create output attributes, variables')
 
+    def isScalarInExplorer(self, inVar ):
+        """
+        Only some DAC scalar vars remain scalar in Explorer
+        :param inVar:
+        :return:
+        """
+
+        isScalar = False
+        if inVar.name == 'crs' or \
+            ('type' in inVar.ncattrs() and \
+             (inVar.getncattr('type') == 'platform' or \
+              inVar.getncattr('type') == 'instrument')):
+            isScalar = True
+
+        return isScalar
+
     def insertVariableValues(self):
         """
         Inserts profile data values from corresponding variables in
@@ -267,8 +311,6 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         # Traverse input files to add variable values to output file
 
         for filename in self.inputFiles :
-
-            print(filename)
 
             # Open the netCDF file
             filePath = os.path.join(self.outputPath, filename)
@@ -285,30 +327,36 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                 trajectoryIndex = 0
                 profileIndex = profileId - 1
 
-                print( 'trajectoryIndex: ' + str(trajectoryIndex))
-                print( 'profileIndex: ' + str(profileIndex))
-
                 for inVarName, inVar in ds.variables.items():
 
-                    print( 'input var: ' + inVarName)
+                    if inVarName == 'trajectory':
+                        continue
 
                     for outVarName, outVar in self.nc.variables.items():
 
                         if outVarName == self.dacVarNameToOoiVarName( inVarName ):
 
-                            print('output var: ' + outVarName)
-
+                            # string
                             if outVar.dtype == 'S1':
-                                print( 'copy 1 string' )
-                                outVar[trajectoryIndex, :] = inVar[:]
+                                strlen = min(outVar.size, inVar.size)
+                                outVar[trajectoryIndex, profileIndex, 0:strlen] = \
+                                    stringtoarr( inVar[0:strlen], strlen)
 
+                            # temporal
                             elif outVar.ndim == 3:
-                                print('copy n values')
                                 outVar[trajectoryIndex, profileIndex, 0:inVar.size] = inVar[:]
+
+                            # profile specific
+                            elif outVar.ndim == 2:
+                                outVar[trajectoryIndex, profileIndex] = inVar[:]
+
+                            # scalar
                             else:
-                                print('copy 1 value')
-                                outVar[trajectoryIndex, profileIndex] = inVar.getValue()
+                                outVar.assignValue( inVar.getValue() )
                             break
+
+                    if inVarName == 'lat' or inVarName == 'lon' or inVarName == 'depth':
+                        self.updateGeospatialExtent( inVar )
 
                 ds.close()
 
@@ -362,3 +410,54 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
             ooiVarName = 'platform_meta'
 
         return ooiVarName
+
+    def updateGeospatialExtent(self, geoVar ):
+        """
+        Computes geospatial extent for entire trajectory
+        :param geoVar:
+        :return: none
+        """
+
+        # retrieve variable extent
+        varMin = geoVar[:].min()
+        varMax = geoVar[:].max()
+
+        if geoVar.name == 'lat':
+            if varMin < self.latMin:
+                self.latMin = varMin
+            if varMax > self.latMax:
+                self.latMax = varMax
+
+        elif geoVar.name == 'lon':
+            if varMin < self.lonMin:
+                self.lonMin = varMin
+            if varMax > self.lonMax:
+                self.lonMax = varMax
+
+        elif geoVar.name == 'depth':
+            if varMin < self.depthMin:
+                self.depthMin = varMin
+            if varMax > self.depthMax:
+                self.depthMax = varMax
+
+    def setGeospatialExtentAttrs(self):
+        """
+        Define global attributes related go computed geospatial extent
+        :return: none
+        """
+
+        self.nc.setncattr('Easternmost_Easting', self.lonMax)
+        self.nc.setncattr('Westernmost_Easting', self.lonMin)
+        self.nc.setncattr('Northernmost_Northing', self.latMax)
+        self.nc.setncattr('Southernmost_Northing', self.latMin)
+
+        self.nc.setncattr('geospatial_lat_max', self.latMax )
+        self.nc.setncattr('geospatial_lat_min', self.latMin )
+        self.nc.setncattr('geospatial_lat_units', "degrees_north")
+        self.nc.setncattr('geospatial_lon_max', self.lonMax )
+        self.nc.setncattr('geospatial_lon_min', self.lonMin )
+        self.nc.setncattr('geospatial_lon_units', "degrees_east" )
+        self.nc.setncattr('geospatial_vertical_max', self.depthMax )
+        self.nc.setncattr('geospatial_vertical_min', self.depthMin )
+        self.nc.setncattr('geospatial_vertical_positive', "down" )
+        self.nc.setncattr('geospatial_vertical_units', "m" )

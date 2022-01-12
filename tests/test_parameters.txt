@@ -1,1 +1,11 @@
+# test of glider data (tests matching glider_to_dac)
+
 -c /home/paul/cgsn/ProfileDataFormatter/tests/config/slocum20 -d /home/paul/cgsn/ProfileDataFormatter/tests/data/cp_379-2021-246-1-33.mrg -p "{'ctd_sensor_prefix': 'sci', 'start_profile_id': 1}" -o ./tests/output
+
+# test auv data to gliderdac output
+
+-c /home/paul/cgsn/ProfileDataFormatter/tests/config/remus600 -d /home/paul/cgsn/ProfileDataFormatter/tests/auvdata/20190930_121445_AUVsubset.txt -m "Remus 600 AUV" -o ./tests/output/auv -l debug -k
+
+# test auv data to both gliderdac and explorer formats
+
+-c /home/paul/cgsn/ProfileDataFormatter/tests/config/remus600 -d /home/paul/cgsn/ProfileDataFormatter/tests/auvdata/20190930_121445_AUVsubset.txt -m "Remus 600 AUV" -o ./tests/output/auv -l debug -k -t OOI-EXPLORER

@@ -218,6 +218,8 @@ class remus600Platform( auvPlatform ) :
         :return: 0
         """
 
+        ret = 0
+
         # If debug mode, go no further
         if self.suppressOutput:
             logging.info('Output suppression indicated, terminating processing')
@@ -239,6 +241,10 @@ class remus600Platform( auvPlatform ) :
                 # read in the subset data file
 
                 data = self.dataFileReader.read( dataFile, tempPath )
+                if data is None:
+                    logging.error("Bad data file encountered {:s}".format(dataFile))
+                    ret = -1
+                    continue
 
                 # Compute 1 sec res. gps data once for whole data file
                 # Gps data is 1 second cadence at surface, gaps during dives.
@@ -251,6 +257,10 @@ class remus600Platform( auvPlatform ) :
                 # compute profile bounds using data from CTD
 
                 allProfileBounds = self.useCtdDataToComputeProfiles( data )
+                if allProfileBounds is None or len(allProfileBounds) == 0:
+                    logging.warning('No valid profiles found in data file, skipping.')
+                    ret = -1
+                    continue
 
                 # for each profile (id unique w/i trajectory 1..n)
 
@@ -295,21 +305,25 @@ class remus600Platform( auvPlatform ) :
             # file writer for reformatting.
 
             if self.targetHost == cc.OOI_EXPLORER_TARGET:
-                deWriter = dataExplorerNetCDFWriter()
-                deWriter.outputPath = self.outputPath
-                deWriter.overwriteExistingFiles = self.replaceOutputFiles
-                deWriter.outputCompressionLevel = self.outputCompression
-                deWriter.writeFormat = self.outputFormat
-                deWriter.trajectoryName = self.deploymentCfg['trajectory_name']
-                deWriter.trajectoryDateTime = self.deploymentCfg['trajectory_datetime']
-                deWriter.sourceFile = dataFile
-                deWriter.inputFiles = outputFiles
+                if len(outputFiles) > 0:
+                    deWriter = dataExplorerNetCDFWriter()
+                    deWriter.outputPath = self.outputPath
+                    deWriter.overwriteExistingFiles = self.replaceOutputFiles
+                    deWriter.outputCompressionLevel = self.outputCompression
+                    deWriter.writeFormat = self.outputFormat
+                    deWriter.trajectoryName = self.deploymentCfg['trajectory_name']
+                    deWriter.trajectoryDateTime = self.deploymentCfg['trajectory_datetime']
+                    deWriter.sourceFile = dataFile
+                    deWriter.inputFiles = outputFiles
 
-                deWriter.setupOutput()
-                deWriter.writeOutput()
-                deWriter.cleanupOutput()
+                    deWriter.setupOutput()
+                    deWriter.writeOutput()
+                    deWriter.cleanupOutput()
+                else:
+                    logging.warning('No output NetCDF files produced, conversion to OOI format skipped.')
+                    ret = -1
 
-        return 0
+        return ret
 
     def cleanupFormatting(self):
         """
