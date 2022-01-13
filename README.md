@@ -4,7 +4,7 @@
 
 * This is the ProfileDataFormatter software development repo, containing the ProfileDataFormatter python application. The app is used to to format data from profiling mobile platforms (such as gliders and AUVs) into netCDF files for import into oceanographic instrument data repositories, such as the IOOS-DAC (https://ioos.github.io/ioosngdac/) and OOI Data Explorer (https://dataexplorer.oceanobservatories.org/). The application is derived from work done by Stuart Pearce at OSU <https://github.com/s-pearce/gliderdac/wiki> processing Slocum Glider data for import into IOOS-DAC. That gliderdac application is imported as a git subtree under legacy in this repository. The gliderdac code is used "as is" to implement formatting for the Slocum glider.
 
-The ProfileDataFormatter is an enhancement to gliderdac in that supports both multiple input and output data formats. It currently accepts either Slocum 2.0 Glider or Remus 600 subset data files as input and produces either or both GliderDAC compatible NetCDF files and Data Explorer compatible NetCDF files as output. Using the older gliderdac software, only GliderDAC compatible NetCDF files can be produced directly. To generate Data Explorer compatible files, output needed to be ingested into the GliderDAC then subsequently exported from GliderDAC into NetCDF files compatible with Data Explorer.
+* The ProfileDataFormatter is an enhancement to gliderdac in that supports both multiple input and output data formats. It currently accepts either Slocum 2.0 Glider or Remus 600 subset data files as input and produces either or both GliderDAC compatible NetCDF files and Data Explorer compatible NetCDF files as output. Using the older gliderdac software, only GliderDAC compatible NetCDF files can be produced directly. To generate Data Explorer compatible files, output needed to be ingested into the GliderDAC then subsequently exported from GliderDAC into NetCDF files compatible with Data Explorer.
 
 ### Installation ###
 
@@ -17,74 +17,74 @@ The ProfileDataFormatter is an enhancement to gliderdac in that supports both mu
 
 * The ProfileDataFormatter is a command prompt driven application supporting a number of passed parameters, as shown below:
 
--h
+-h  
    help (optional), displays a list of command-line options
    
--c {path}
-   configuration path (required)
+-c {path}  
+   configuration path (required)  
    directory in which configuration files are to be found
 
--d {data file(s)}
-   One or more data files to be processed (required)
+-d {data file(s)}  
+   One or more data files to be processed (required)  
    Wildcards are supported using glob syntax
 
--m "Slocum Glider 2.0" or "Remus 600 AUV"
-   Mobile platform that is the source of input data
+-m "Slocum Glider 2.0" or "Remus 600 AUV"  
+   Mobile platform that is the source of input data  
    (optional, default is "Slocum Glider 2.0")
 
--t "IOOS-DAC" or "OOI-EXPLORER"
-   Target repository for which to format data file(s)
+-t "IOOS-DAC" or "OOI-EXPLORER"  
+   Target repository for which to format data file(s)  
    (optional, default is "IOOS-DAC")
 
--p { mobile platform specific parameters }
-   Platform specific arguments (optional)
-   Syntax: JSON dictionary string '{"paramName": "paramValue", ...}'
+-p { mobile platform specific parameters }  
+   Platform specific arguments (optional)  
+   Syntax: JSON dictionary string '{"paramName": "paramValue", ...}'  
    ie:  "{'ctd_sensor_prefix' : 'sci', 'start_profile_id' : 15}"
    
    For Slocum Glider 2.0, the following are supported:
 
-       'ctd_sensor_prefix' : 'sci' or 'm'  [default 'sci']
+   - 'ctd_sensor_prefix' : 'sci' or 'm'  [default 'sci']
 
-       'start_profile_id' : n  [default: 0, implies use unix timestamp
+   - 'start_profile_id' : n  [default: 0, implies use unix timestamp
 
--o {path}
-   output path (optional, default is '.')
+-o {path}  
+   output path (optional, default is '.')  
    Path into which output files are written
    
 -k
-   Clobber flag
-   Indicates that existing output files for the same trajectory
+   Clobber flag  
+   Indicates that existing output files for the same trajectory  
    are to be overwritten
 
--f "NETCDF3_CLASSIC" or "NETCDF4_CLASSIC" or "NETCDF4"
+-f "NETCDF3_CLASSIC" or "NETCDF4_CLASSIC" or "NETCDF4"  
    NetCDF file format to be written (optional, default is NETCDF4_CLASSIC)
 
--cl {0,1,2,3,4,5,6,7,8,9}
+-cl {0,1,2,3,4,5,6,7,8,9}  
    Compression level for output NetCDF file (optional, default is 1)
 
--s
-   Suppress output.
+-s  
+   Suppress output.  
    Verifies configuration files without writing output.
 
--l {debug,info,warning,error,critical}
-   Log level (optional, default is info)
-   Log file is ProfileDataFormatter.log, written to the current
-   working directory. The file is appended for each new run, with
+-l {debug,info,warning,error,critical}  
+   Log level (optional, default is info)  
+   Log file is ProfileDataFormatter.log, written to the current  
+   working directory. The file is appended for each new run, with  
    newest log entries at the end of the file.
 
 In addition to the above command-line options, the ProfileDataFormatter utilizes the same configuration files and settings as its gliderdac predecessor: sensor_defs.json, global_attributes.json, instruments.json and deployment.json. Contents of these configuration files are described as follows:
 
-sensor_defs.json - contains items referred to as sensor_defs that correspond to NetCDF output variables and their attributes. The list of NetCDF variables, their definitions and required attributes and values are defined by the IOOS GliderDAC repository at the previously defined link.
+*sensor_defs.json* - contains items referred to as sensor_defs that correspond to NetCDF output variables and their attributes. The list of NetCDF variables, their definitions and required attributes and values are defined by the IOOS GliderDAC repository at the previously defined link.
 
    * Note that for support of Remus AUV Subset data files as input, a sensor_def attribute, "subset_field" has been added to the list of required attributes for sensor_defs having an observation_type attribute with values of either "measured" or "calculated". This defines the column name in the subset data file identifying the value to be used in the message type corresponding to the sensor of interest.
 
-global_attributes.json - contains the static global attributes that are written to the global attributes in the NetCDF file. The list of required global attributes are defined by the IOOS GliderDAC repository at the link above.
+*global_attributes.json* - contains the static global attributes that are written to the global attributes in the NetCDF file. The list of required global attributes are defined by the IOOS GliderDAC repository at the link above.
 
-instruments.json - contains the set of scientific instruments aboard the mobile platform that is the source of the data files to be processed. All metadata, such as instrument calibration, serial numbers and attributes are included in this file.
+*instruments.json* - contains the set of scientific instruments aboard the mobile platform that is the source of the data files to be processed. All metadata, such as instrument calibration, serial numbers and attributes are included in this file.
 
    * Note that for support of Remus AUV Subset data files as input, an instrument attribute named "subset_msg_id" has been added to the attribute list for each instrument reporting data in the file. The value of the subset_msg_id attribute is to be taken from the most recently available version of the "Data Subsetting Manual", published and distributed by Hydroid (Kongsberg Maritime).
 
-deployment.json - contains a dictionary of attributes describing the specific deployment of the mobile platform being processed
+*deployment.json* - contains a dictionary of attributes describing the specific deployment of the mobile platform being processed
 
 
 Note that Slocum 2.0 Glider files are expected to be in the form of merged, ascii file format as described in the gliderdac usage instructions at the link above.
