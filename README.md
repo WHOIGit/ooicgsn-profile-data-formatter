@@ -18,7 +18,8 @@
 * The ProfileDataFormatter is a command prompt driven application supporting a number of passed parameters, as shown below:
 
 -h  
-   help (optional), displays a list of command-line options
+   help (optional),
+   displays a list of command-line options
    
 -c {path}  
    configuration path (required)  
@@ -37,7 +38,8 @@
    (optional, default is "IOOS-DAC")
 
 -p { mobile platform specific parameters }  
-   Platform specific arguments (optional)  
+   Platform specific arguments (optional)
+   
    Syntax: JSON dictionary string '{"paramName": "paramValue", ...}'  
    ie:  "{'ctd_sensor_prefix' : 'sci', 'start_profile_id' : 15}"
    
@@ -68,9 +70,7 @@
 
 -l {debug,info,warning,error,critical}  
    Log level (optional, default is info)  
-   Log file is ProfileDataFormatter.log, written to the current  
-   working directory. The file is appended for each new run, with  
-   newest log entries at the end of the file.
+   Log file is ProfileDataFormatter.log, written to the current working directory. The file is appended for each new run, with newest log entries at the end of the file.
 
 In addition to the above command-line options, the ProfileDataFormatter utilizes the same configuration files and settings as its gliderdac predecessor: sensor_defs.json, global_attributes.json, instruments.json and deployment.json. Contents of these configuration files are described as follows:
 
