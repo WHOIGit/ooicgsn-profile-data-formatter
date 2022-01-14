@@ -36,6 +36,7 @@
 -t "IOOS-DAC" or "OOI-EXPLORER"  
    Target repository for which to format data file(s)  
    (optional, default is "IOOS-DAC")
+   Note that selection of OOI-EXPLORER will produce output files for both OOI and DAC. Smaller, profile specific output files of the format "{trajectoryName}{profileTime}_delayed.nc" or "{trajectoryName}{profileTime}_rt.nc" are intended for DAC. The larger, full trajectory NetCDF file "{trajectoryName}{trajectoryTime}.nc" is intended for OOI Explorer.
 
 -p { mobile platform specific parameters }  
    Platform specific arguments (optional)

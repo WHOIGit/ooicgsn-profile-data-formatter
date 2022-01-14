@@ -43,6 +43,6 @@
     // and the name is the DAC required deployment/trajectory name
     // A concatenation of the glider name and the starting datetime:
     // <glider_name>-yyyymmddTHHMM
-    "trajectory_datetime": "2021-04-13T11:36:32Z",
-    "trajectory_name": "cp_6264-20210413T1136"
+    "trajectory_datetime": "2019-09-30T12:14:45Z",
+    "trajectory_name": "cp_6264-20190930T1214"
 }
