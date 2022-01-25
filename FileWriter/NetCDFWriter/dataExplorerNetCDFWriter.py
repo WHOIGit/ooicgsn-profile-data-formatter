@@ -248,7 +248,7 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                                                    fill_value=-999 )
             profileIdVar[:] = self.profileIdList
             profileIdVar.setncattr( 'actual_range', len(self.profileIdList))
-            profileIdVar.setncattr( 'ancillary_variables', 'profile_time')
+            profileIdVar.setncattr( 'ancillary_variables', 'time')
             profileIdVar.setncattr( 'cf_role', 'profile_id')
             profileIdVar.setncattr( 'comment', 'Sequential profile number within the trajectory')
             profileIdVar.setncattr( 'ioos_category', 'Identifier')
