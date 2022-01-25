@@ -258,7 +258,7 @@
 	"attrs": {
             "_FillValue": NaN,
             "accuracy": " ",
-            "ancillary_variables": "flort_chlorophyll_qc",
+            "ancillary_variables": "chlorophyll_a_qc",
             "instrument": "instrument_flbbcd",
 	    "subset_field": "parameter5",
             "long_name": "Chlorophyll A concentration",
@@ -291,9 +291,8 @@
             "platform": "platform",
             "precision": " ",
             "resolution": " ",
-            "standard_name": "",
             "units": "ppb",
-            "valid_max": 375,
+            "valid_max": 375.0,
             "valid_min": 0.0
 	}
     },
@@ -340,7 +339,7 @@
             "precision": " ",
             "resolution": " ",
             "standard_name": "moles_of_oxygen_per_unit_mass_in_sea_water",
-            "units": "umol L-1",
+            "units": "umol kg-1",
             "valid_max": 500.0,
             "valid_min": 0.0
         }
@@ -363,13 +362,13 @@
             "precision": " ",
             "resolution": " ",
             "standard_name": "mole_concentration_of_nitrate_in_sea_water",
-            "units": "uMol L-1",
+            "units": "umol L-1",
             "valid_max": 500.0,
             "valid_min": 0.0
         }
     },
     "suna_nitrogen": {
-        "nc_var_name": "nitrogenInNitrate",
+        "nc_var_name": "nitrogen_in_nitrate",
         "dimension": "time",
         "type": "f8",
         "attrs": {
@@ -385,8 +384,8 @@
             "platform": "platform",
             "precision": " ",
             "resolution": " ",
-            "standard_name": "mass_concentration_of_atomic_nitrogen_in_sea_water",
-            "units": "Mg L-1",
+            "standard_name": "mass_concentration_of_inorganic_nitrogen_in_sea_water",
+            "units": "mg L-1",
             "valid_max": 500.0,
             "valid_min": 0.0
         }
@@ -449,7 +448,6 @@
             "instrument": "instrument_sonar",
 	    "subset_field": "pitch",
             "standard_name": "platform_pitch_angle",
-            "comment": "",
             "observation_type": "measured",
             "platform": "platform",
             "precision": " ",
@@ -471,7 +469,6 @@
             "instrument": "instrument_sonar",
 	    "subset_field": "roll",
             "standard_name": "platform_roll_angle",
-            "comment": "",
             "observation_type": "measured",
             "platform": "platform",
             "precision": " ",

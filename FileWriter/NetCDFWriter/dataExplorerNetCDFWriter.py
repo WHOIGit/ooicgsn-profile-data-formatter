@@ -22,7 +22,7 @@ from FileWriter.NetCDFWriter.netCDFWriter import netCDFWriter
 import logging
 import os
 from netCDF4 import Dataset, stringtoarr
-
+import datetime
 
 class dataExplorerNetCDFWriter( netCDFWriter ) :
 
@@ -45,6 +45,11 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         self.latMax = -91.0
         self.depthMin = 99999.0
         self.depthMax = -1.0
+
+        # temporal extent
+        self.dateTimeMin = 9999999999
+        self.dateTimeMax = 0
+        self.timeResolution = 0.0
 
     @property
     def trajectoryName(self):
@@ -96,6 +101,19 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         # having the most time steps for sizing
         # the time and observations dimensions
 
+        # clear out computed geospatial and temporal extents
+
+        self.lonMin = 361.0
+        self.lonMax = -361.0
+        self.latMin = 91.0
+        self.latMax = -91.0
+        self.depthMin = 99999.0
+        self.depthMax = -1.0
+        self.dateTimeMin = 9999999999
+        self.dateTimeMax = 0
+        self.timeResolution = 0.0
+
+
         self.profileIdList, self.maxObsPerProfile = self.computeProfileDimensions()
 
         # Open output netcdf file for trajectory
@@ -116,15 +134,6 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         self.nc.createDimension( 'trajectory', 1 )
         self.nc.createDimension( 'traj_strlen', len(self.trajectoryName) )
         self.nc.createDimension( 'source_file_strlen', len(self.sourceFile) )
-
-        # clear out computed geospatial extent
-
-        self.lonMin = 361.0
-        self.lonMax = -361.0
-        self.latMin = 91.0
-        self.latMax = -91.0
-        self.depthMin = 99999.0
-        self.depthMax = -1.0
 
 
     # virtual method for writing output
@@ -188,6 +197,13 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                     if dim.name == 'time':
                         if dim.size > maxTimesPerProfile:
                             maxTimesPerProfile = dim.size
+                        if maxTimesPerProfile > 1:
+                            self.timeResolution = ds.variables['time'][1] - \
+                                                  ds.variables['time'][0]
+                        if ds.variables['time'][0] < self.dateTimeMin:
+                            self.dateTimeMin = ds.variables['time'][0]
+                        if ds.variables['time'][-1] > self.dateTimeMax:
+                            self.dateTimeMax = ds.variables['time'][-1]
                         break
 
                 for var in ds.variables.values():
@@ -221,7 +237,7 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
             trajVar = self.nc.createVariable( 'trajectory', 'S1', ('trajectory', 'traj_strlen',) )
             trajVar[0,:] = stringtoarr( self.trajectoryName, len(self.trajectoryName))
             trajVar.setncattr( '_ChunkSizes', len(self.trajectoryName))
-            trajVar.setncattr( '_Encoding', 'ISO-885901')
+            #trajVar.setncattr( '_Encoding', 'ISO-885901')
             trajVar.setncattr( 'cf_role', 'trajectory_id')
             trajVar.setncattr( 'comment', 'A trajectory is one deployment')
             trajVar.setncattr( 'ioos_category', 'Identifier')
@@ -276,7 +292,11 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                                                  fill_value=fillValue )
                 for attrName in inVar.ncattrs():
                     if attrName != "_FillValue":
-                        outVar.setncattr( attrName, inVar.getncattr(attrName))
+                        if attrName != "ancillary_variables":
+                            outVar.setncattr( attrName, inVar.getncattr(attrName))
+                        else:
+                            outVar.setncattr( attrName,
+                               self.dacAttrValsToOoiAttrVals( inVar.getncattr(attrName)) )
 
             dsIn.close()
 
@@ -411,6 +431,21 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
 
         return ooiVarName
 
+    def dacAttrValsToOoiAttrVals(self, attrListString ):
+        """
+        Translates names in a string list from DAC to OOI names
+        :param attrListString:
+        :return: updated attrListString
+        """
+
+        attrVals = attrListString.split(', ')
+
+        outAttrVals = []
+        for attrVal in attrVals:
+            outAttrVals.append( self.dacVarNameToOoiVarName( attrVal ))
+
+        return ", ".join( outAttrVals )
+
     def updateGeospatialExtent(self, geoVar ):
         """
         Computes geospatial extent for entire trajectory
@@ -461,3 +496,24 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         self.nc.setncattr('geospatial_vertical_min', self.depthMin )
         self.nc.setncattr('geospatial_vertical_positive', "down" )
         self.nc.setncattr('geospatial_vertical_units', "m" )
+
+        boundsStr = 'POLYGON ((' + \
+            str(self.latMin) + ' ' + str(self.lonMin) + ', ' + \
+            str(self.latMax) + ' ' + str(self.lonMin) + ', ' + \
+            str(self.latMax) + ' ' + str(self.lonMax) + ', ' + \
+            str(self.latMin) + ' ' + str(self.lonMax) + ', ' + \
+            str(self.latMin) + ' ' + str(self.lonMin) + '))'
+
+        self.nc.setncattr('geospatial_bounds', boundsStr)
+        self.nc.setncattr('geospatial_bounds_crs', 'EPSG:4326')
+        self.nc.setncattr('geospatial_bounds_vertical_crs', 'EPSG:5831')
+
+        # Insert time coverage attributes
+        self.nc.setncattr( 'time_coverage_start', \
+            datetime.datetime.fromtimestamp( self.dateTimeMin ).strftime('%Y%m%dT%H%MZ'))
+        self.nc.setncattr( 'time_coverage_end', \
+            datetime.datetime.fromtimestamp( self.dateTimeMax ).strftime('%Y%m%dT%H%MZ'))
+        self.nc.setncattr( 'time_coverage_duration', \
+            'PT' + str( self.dateTimeMax - self.dateTimeMin ) + 'S' )
+        self.nc.setncattr( 'time_coverage_resolution', \
+                           'PT' + str(self.timeResolution) + 'S' )

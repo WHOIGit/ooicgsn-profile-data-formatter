@@ -158,7 +158,7 @@ class dacNetCDFWriter(netCDFWriter) :
         filePath = os.path.join( self.outputPath, self.fileName)
         if os.path.exists(filePath):
             if self.overwriteExistingFiles == False:
-                logging.warning("File exists, overwrite not selected " + fileName)
+                logging.warning("File exists, overwrite not selected " + self.fileName)
                 return
 
         self.nc = Dataset( filePath, mode='w', format=self.writeFormat)

@@ -1,11 +1,22 @@
+
+# From the ProfileDataFormatter root directory, paste and run each test case
+# individually. Output NetCDF files are written to tests/output or
+# tests/output/auv directories. The ProfileDataFormatter.log file in the
+# ProfileDataFormatter root directory will contain any errors.
+
+
 # test of glider data (tests matching glider_to_dac)
 
--c /home/paul/cgsn/ProfileDataFormatter/tests/config/slocum20 -d /home/paul/cgsn/ProfileDataFormatter/tests/data/cp_379-2021-246-1-33.mrg -p "{'ctd_sensor_prefix': 'sci', 'start_profile_id': 1}" -o ./tests/output
+python ./profileDataFormatter.py -c ./tests/config/slocum20 -d ./tests/data/cp_379-2021-246-1-33.mrg -p "{'ctd_sensor_prefix': 'sci', 'start_profile_id': 1}" -o ./tests/output -k
+
+# test of glider data to both gliderdac and explorer formats
+
+python ./profileDataFormatter.py -c ./tests/config/slocum20 -d ./tests/data/cp_379-2021-246-1-33.mrg -p "{'ctd_sensor_prefix': 'sci', 'start_profile_id': 1}" -o ./tests/output -k -t OOI-EXPLORER
 
 # test auv data to gliderdac output
 
--c /home/paul/cgsn/ProfileDataFormatter/tests/config/remus600 -d /home/paul/cgsn/ProfileDataFormatter/tests/auvdata/20190930_121445_AUVsubset.txt -m "Remus 600 AUV" -o ./tests/output/auv -l debug -k
+python ./profileDataFormatter.py -c ./tests/config/remus600 -d ./tests/auvdata/20190930_121445_AUVsubset.txt -m "Remus 600 AUV" -o ./tests/output/auv -l debug -k
 
 # test auv data to both gliderdac and explorer formats
 
--c /home/paul/cgsn/ProfileDataFormatter/tests/config/remus600 -d /home/paul/cgsn/ProfileDataFormatter/tests/auvdata/20190930_121445_AUVsubset.txt -m "Remus 600 AUV" -o ./tests/output/auv -l debug -k -t OOI-EXPLORER
+python ./profileDataFormatter.py -c ./tests/config/remus600 -d ./tests/auvdata/20190930_121445_AUVsubset.txt -m "Remus 600 AUV" -o ./tests/output/auv -l debug -k -t OOI-EXPLORER

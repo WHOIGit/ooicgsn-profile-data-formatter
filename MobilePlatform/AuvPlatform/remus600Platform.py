@@ -618,7 +618,7 @@ class remus600Platform( auvPlatform ) :
         self.outputFileWriter.addGlobalAttr('wmo_id', wmoId )
 
         nowUtc = datetime.datetime.utcnow()
-        nowUtcString = nowUtc.strftime('%Y-%m-%dT%h:%m:%sZ')
+        nowUtcString = nowUtc.strftime('%Y-%m-%dT%H:%M:%SZ')
         self.outputFileWriter.addGlobalAttr('history', nowUtcString + ': ./profileDataFormatter.py')
 
         self.outputFileWriter.addGlobalAttr('date_created', nowUtcString )
@@ -730,10 +730,10 @@ class remus600Platform( auvPlatform ) :
                                    ' bad_data_that_are_potentially_correctable' +
                                    ' bad_data value_changed not_used not_used' +
                                    ' interpolated_value missing_value',
-                  'flag_values': '0b, 1b, 2b, 3b, 4b, 5b, 6b, 7b, 8b, 9b',
+                  'flag_values': np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9],dtype=np.int8),
                   'long_name': sensorDef['nc_var_name'] + ' quality flag',
-                  'valid_max': 9,
-                  'valid_min': 0 }
+                  'valid_max': np.int8(9),
+                  'valid_min': np.int8(0) }
 
         if qcTimes is None:
             values = 0

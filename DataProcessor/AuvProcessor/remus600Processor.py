@@ -278,7 +278,7 @@ class remus600Processor( auvProcessor ) :
         DO = ne.evaluate('exp((salinity-S0)*Bts + C0*(salinity**2-S0**2)) * DO')
 
         # convert back to volume
-        DO = ne.evaluate('DO*pdens/1000')
+        # DO = ne.evaluate('DO*pdens/1000')
 
         return DO
 
