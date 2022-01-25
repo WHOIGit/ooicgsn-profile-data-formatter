@@ -94,15 +94,15 @@ Note that Slocum 2.0 Glider files are expected to be in the form of merged, asci
 
 Example files for validating the installation of the ProfileDataFormatter are provided in the repository. Calling parameters, configuration settings and input data files from both Slocum Glider and Remus AUV mobile platforms are supplied. All test files can be found under {installation directory}/tests, as follows:
 
-tests/test_parameters.txt - calling sequences for each of three test cases. Paste and run each from the ProfileDataFormatter's root installation directory
+* tests/test_parameters.txt - calling sequences for each of the test cases. Paste and run each from the ProfileDataFormatter's root installation directory
 
-tests/config/slocum200, tests/config/remus600 - each directory contains the four required json configuration files for a particular mobile platform deployment. These are deployment.json, global_attributes.json, instruments.json and sensor+defs.json
+* tests/config/slocum200, tests/config/remus600 - each directory contains the four required json configuration files for a particular mobile platform deployment. These are deployment.json, global_attributes.json, instruments.json and sensor+defs.json
 
-tests/data - contains Slocum200 ascii merge data file used as input to the Slocum200 test case
+* tests/data - contains Slocum200 ascii merge data file used as input to the Slocum200 test cases
 
-tests/auvdata - contains Remus600 subset data files used to drive the Remus600 test cases
+* tests/auvdata - contains Remus600 subset data files used to drive the Remus600 test cases
 
-tests/output, tests/output/auv - empty paths to which test case output gets written
+* tests/output, tests/output/auv - empty paths to which test case output gets written
 
 When each test is run, in addition to NetCDF output files being generated, a log file, ProfileDataFormatter.log will be written to the directory from which the application is run. The file should be examined for errors and warnings.
 
