@@ -212,7 +212,8 @@ class remus600SubsetMsgData(  ) :
             if self.dataFile is not None:
                 df = pandas.read_csv(
                     self.dataFile, header=0,
-                    names= self.msgTypeFields[self.msgId].split(','))
+                    names= self.msgTypeFields[self.msgId].split(','),
+                    low_memory = False)
                 #memory issues - do not cache for now
                 #self.cachedData = df
         else:

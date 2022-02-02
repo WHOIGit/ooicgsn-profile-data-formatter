@@ -146,7 +146,11 @@ class remus600Processor( auvProcessor ) :
         minDeltaTMillisecs = 1000 * minDeltaTSecs
 
         # compute rate of depth change and direction
-        dZdT = np.diff( depths ) / np.diff( times )
+        # note: have seen consecutive, duplicate times; handle it
+        # to avoid divide by zero
+        dt = np.diff( times )
+        dt = np.where( dt == 0, 1, dt )
+        dZdT = np.diff( depths ) / dt
         updownlevel = np.sign( dZdT )
 
         # init return array of [start, end] items
