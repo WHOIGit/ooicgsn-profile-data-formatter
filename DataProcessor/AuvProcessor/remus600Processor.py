@@ -256,30 +256,39 @@ class remus600Processor( auvProcessor ) :
             Table 1, 5th column.
         """
 
+        # Issues with running under python 3.8, & compatible libraries, gsw hates Dataframe/Series. Use np.array
+
+        raRawO2Concentration = rawO2Concentration.to_numpy()
+        raSalinity = salinity.to_numpy()
+        raDepth = depth.to_numpy()
+        raTemp = temp.to_numpy()
+        raLat = lat.to_numpy()
+        raLon = lon.to_numpy()
+
         # depth to pressure
-        pressure = p_from_z( -depth , lat)
+        pressure = p_from_z( -raDepth , raLat)
 
         # density calculation from GSW toolbox
-        SA = SA_from_SP(salinity, pressure, lon, lat)
-        CT = CT_from_t(SA, temp, pressure)
+        SA = SA_from_SP( raSalinity, pressure, raLon, raLat)
+        CT = CT_from_t(SA, raTemp, pressure)
         pdens = rho(SA, CT, pref)  # potential referenced to p=0
 
         # Convert from volume to mass units:
-        DO = ne.evaluate('1000*rawO2Concentration/pdens')
+        DO = ne.evaluate('1000*raRawO2Concentration/pdens')
 
         # Pressure correction:
         DO = ne.evaluate('(1 + (0.032*pressure)/1000) * DO')
 
         # Salinity correction (Garcia and Gordon, 1992, combined fit):
         S0 = 0
-        ts = ne.evaluate('log((298.15-temp)/(273.15+temp))')
+        ts = ne.evaluate('log((298.15-raTemp)/(273.15+raTemp))')
         B0 = -6.24097e-3
         B1 = -6.93498e-3
         B2 = -6.90358e-3
         B3 = -4.29155e-3
         C0 = -3.11680e-7
         Bts = ne.evaluate('B0 + B1*ts + B2*ts**2 + B3*ts**3')
-        DO = ne.evaluate('exp((salinity-S0)*Bts + C0*(salinity**2-S0**2)) * DO')
+        DO = ne.evaluate('exp((raSalinity-S0)*Bts + C0*(raSalinity**2-S0**2)) * DO')
 
         # convert back to volume
         # DO = ne.evaluate('DO*pdens/1000')

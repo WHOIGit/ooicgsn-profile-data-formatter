@@ -198,12 +198,12 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
                         if dim.size > maxTimesPerProfile:
                             maxTimesPerProfile = dim.size
                         if maxTimesPerProfile > 1:
-                            self.timeResolution = ds.variables['time'][1] - \
-                                                  ds.variables['time'][0]
+                            self.timeResolution = int(ds.variables['time'][1] - \
+                                                  ds.variables['time'][0])
                         if ds.variables['time'][0] < self.dateTimeMin:
-                            self.dateTimeMin = ds.variables['time'][0]
+                            self.dateTimeMin = int(ds.variables['time'][0])
                         if ds.variables['time'][-1] > self.dateTimeMax:
-                            self.dateTimeMax = ds.variables['time'][-1]
+                            self.dateTimeMax = int(ds.variables['time'][-1])
                         break
 
                 for var in ds.variables.values():

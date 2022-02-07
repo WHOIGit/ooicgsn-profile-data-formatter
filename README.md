@@ -8,6 +8,7 @@
 
 ### Installation ###
 
+    > Assumption: miniconda python 3.8, 64 bit environment
     > git clone https://github.com/WHOIGit/ooicgsn-profile-data-formatter.git
     > cd ooicgsn-profile-data-formatter
     > conda env create --prefix ./pdfenv -f environment.yml
