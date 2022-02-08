@@ -513,6 +513,7 @@ class dacLegacyNetCDFWriter(netCDFWriter) :
         # Store the value in the scalar if there is one
         if value:
             self._nc.variables[sensor_def['nc_var_name']].assignValue(value)
+            self.insert_qc_var( sensor_def['nc_var_name'], value, None )
 
         return True
 
@@ -1034,11 +1035,51 @@ class dacLegacyNetCDFWriter(netCDFWriter) :
         # Add the variable data
         try:
             self._nc.variables[datatype['nc_var_name']][:] = var_data
+            self.insert_qc_var( datatype['nc_var_name'], var_data, datatype['dimension'] )
+
         except TypeError as e:
             logging.error('NetCDF variable {:s}: {:}'.format(var_name, e))
             return
 
         return True
+
+    def insert_qc_var(self, var_name, var_data, var_dimension):
+
+        attrs = {'_FillValue': -127,
+                 'flag_meanings': 'no_qc_performed good_data probably_good_data' +
+                                  ' bad_data_that_are_potentially_correctable' +
+                                  ' bad_data value_changed not_used not_used' +
+                                  ' interpolated_value missing_value',
+                 'flag_values': np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=np.int8),
+                 'long_name': var_name + ' quality flag',
+                 'valid_max': np.int8(9),
+                 'valid_min': np.int8(0)}
+
+        if var_data is None or var_dimension is None:
+            values = 0
+            dims = ()
+        else:
+            values = np.zeros( len( var_data ))
+            dims = (var_dimension,)
+
+        qcVarName = var_name + '_qc'
+
+        ncvar = self._nc.createVariable(
+            qcVarName,
+            'byte',
+            dimensions= dims,
+            zlib=True,
+            complevel=self.compressionLevel,
+            fill_value=attrs['_FillValue']
+        )
+        if var_dimension is None:
+            ncvar.assignValue( values )
+        else:
+            self._nc.variables[ qcVarName ][:] = values
+
+        for key, val in attrs.items():
+            if key != '_FillValue':
+                self._nc.variables[ qcVarName ].setncattr(key, val)
 
     @staticmethod
     def delta_to_iso_duration(timeobj):
