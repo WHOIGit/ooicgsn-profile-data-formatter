@@ -215,7 +215,8 @@ class remus600SubsetMsgData(  ) :
                     names= self.msgTypeFields[self.msgId].split(','),
                     low_memory = False)
                 #memory issues - do not cache for now
-                #self.cachedData = df
+                # Note: enabling caching speedup 2x, memory 2x
+                self.cachedData = df
         else:
             df = self.cachedData
 

@@ -77,7 +77,9 @@ class remus600SubsetData(  ) :
         # Note: if reading slices of data repeatedly proves too slow,
         # and memory proves not a concern, lose the copy and enable
         # cacheing in remus600SubsetMsgData.py
+        # Note: enabling caching speedup 2x, memory 2x
 
-        dataSlice = msgData[ sliceRange ].copy()
+        #dataSlice = msgData[ sliceRange ].copy()
 
-        return dataSlice
+        #return dataSlice
+        return msgData[ sliceRange ]
