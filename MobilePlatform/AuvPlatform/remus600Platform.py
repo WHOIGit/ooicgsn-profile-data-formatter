@@ -289,16 +289,21 @@ class remus600Platform( auvPlatform ) :
                         self.deploymentCfg['trajectory_datetime']
                     self.outputFileWriter.sourceFile = dataFile
 
-                    self.formatProfileData( profileId, profileBounds[0], profileBounds[-1],
-                                            allProfileBounds, data, gpsDataNoGaps )
+                    try:
+                        self.formatProfileData( profileId, profileBounds[0], profileBounds[-1],
+                                                allProfileBounds, data, gpsDataNoGaps )
 
-                    # Generate an output file
+                        # Generate an output file
 
-                    self.outputFileWriter.setupOutput()
-                    self.outputFileWriter.writeOutput()
-                    self.outputFileWriter.cleanupOutput()
+                        self.outputFileWriter.setupOutput()
+                        self.outputFileWriter.writeOutput()
+                        self.outputFileWriter.cleanupOutput()
+
+                    except Exception as e:
+                        logging.warning( "Profile " + str(profileId) + " invalid, ignored ")
 
                     profileId = profileId + 1
+
 
             # If output target is OOI Explorer, feed the output
             # files formatted for GliderDAC to the OOI Explorer
@@ -436,6 +441,7 @@ class remus600Platform( auvPlatform ) :
         else:
             logging.warning('Missing sensor current_eastward in sensor_defs config,' +
                             ' required for current calculations')
+            raise Exception("Invalid profile, see log file for details")
 
         #
         # Profile avg time, latitude, longitude
@@ -444,16 +450,22 @@ class remus600Platform( auvPlatform ) :
         sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'profile_time' )
         if sensorDef:
             profileData = remus600Platform.getDataSlice( gpsData, profileStartTime, profileEndTime )
+            if not profileData.empty:
 
-            profileTime, profileLat, profileLon = self.dataProcessor.findMidpointTimeLatLon(
-                profileData.get('timestamp'), profileData.get('latitude'), profileData.get('longitude'))
+                profileTime, profileLat, profileLon = self.dataProcessor.findMidpointTimeLatLon(
+                    profileData.get('timestamp'), profileData.get('latitude'), profileData.get('longitude'))
 
-            calculatedVars['profile_time'] = {'values': profileTime, 'times': None }
-            calculatedVars['profile_lat'] = {'values': profileLat, 'times': None }
-            calculatedVars['profile_lon'] = {'values': profileLon, 'times': None }
+                calculatedVars['profile_time'] = {'values': profileTime, 'times': None}
+                calculatedVars['profile_lat'] = {'values': profileLat, 'times': None}
+                calculatedVars['profile_lon'] = {'values': profileLon, 'times': None}
+            else:
+                logging.warning('No gps data bounding profile, assuming abbreviated profile')
+                raise Exception("Invalid profile, see log file for details")
+
         else:
             logging.warning('Missing sensor profile_time in sensor_defs config,' +
                             ' required for profile calculations')
+            raise Exception("Invalid profile, see log file for details")
 
         #
         # Depth avg current time, lat, lon, east current, north current
@@ -492,6 +504,7 @@ class remus600Platform( auvPlatform ) :
         else:
             logging.warning('Missing sensor time_uv in sensor_defs config,' +
                             ' required for depth-avg current calculations')
+            raise Exception("Invalid profile, see log file for details")
 
         #
         # density
@@ -510,6 +523,7 @@ class remus600Platform( auvPlatform ) :
         else:
             logging.warning('Missing sensor density in sensor_defs config,' +
                             ' required for density calculations')
+            raise Exception("Invalid profile, see log file for details")
 
         #
         # irradiance
@@ -529,6 +543,7 @@ class remus600Platform( auvPlatform ) :
         else:
             logging.warning('Missing sensor PAR in sensor_defs config,' +
                             ' required for irradiance calculations')
+            raise Exception("Invalid profile, see log file for details")
 
         #
         # dissolved oxygen
@@ -548,6 +563,7 @@ class remus600Platform( auvPlatform ) :
         else:
             logging.warning('Missing sensor dissolved_oxygen in sensor_defs config,' +
                             ' required for oxygen calculations')
+            raise Exception("Invalid profile, see log file for details")
 
         return calculatedVars
 
