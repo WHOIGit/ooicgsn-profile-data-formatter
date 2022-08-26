@@ -379,6 +379,11 @@ class remus600Platform( auvPlatform ) :
                 dataTimesMs = data.timesInMillisecs( profileData.get('timestamp'),
                                                      profileData.get('missionTime') )
 
+                # Purge out of range values, based on sensor configured
+                # valid_min, valid_max and __FillValue settings
+
+                self.purgeOutOfRangeData( profileId, profileData, sensorDef, dataTimesMs )
+
             # use profile data directly for measured sensors
 
             if remus600Platform.sensorAttrMatches( sensorDef, 'observation_type', 'measured'):
@@ -763,3 +768,72 @@ class remus600Platform( auvPlatform ) :
             attrs,
             values,
             qcTimes )
+
+    def purgeOutOfRangeData( self, profileId, profileData, sensorDef, dateTimeMs ):
+        '''
+        If profile data contains out of range values, log them and
+        replace them with the sensor's fill value
+        :param profileId (for logging)
+        :param profileData
+        :param sensorDef
+        :param dateTimeMs (for logging)
+        :return: None
+        '''
+
+        if not remus600Platform.sensorHasAttr(sensorDef, '_FillValue'):
+            return
+
+        profileDataColumn = sensorDef['attrs']['subset_field']
+        if not profileDataColumn in profileData.columns:
+            return
+
+        #print( 'purging column ' + profileDataColumn )
+        instrument = "instrument unspecified"
+        if remus600Platform.sensorHasAttr(sensorDef, 'instrument'):
+            instrument = sensorDef['attrs']['instrument']
+
+        if remus600Platform.sensorHasAttr(sensorDef, 'valid_min'):
+
+            outOfRangeLow = profileData[profileDataColumn] < sensorDef['attrs']['valid_min']
+
+            if profileData[profileDataColumn][outOfRangeLow].size > 0:
+
+                # TBD - eventually stub out logging, leave in to get a handle on bad data
+                replacedStr = ''
+                for index, value in profileData[profileDataColumn][outOfRangeLow].items():
+                    replacedStr = replacedStr + str(dateTimeMs[index]) + ' ' + \
+                    str(profileData[profileDataColumn][index]) + '\n'
+                    
+                logging.warning('Profile ' + str(profileId) + ', ' + instrument +
+                                ', sensor ' + profileDataColumn +
+                                ' contains low out of range data. ' +
+                                'Replacing with _FillValue ' +
+                                str(sensorDef['attrs']['_FillValue']) +
+                                ' at: \n' + replacedStr)
+
+                # Conditionally replacing dataframe values requires odd syntax below
+                profileData.loc[profileData[profileDataColumn] < sensorDef['attrs']['valid_min'],
+                                profileDataColumn] = sensorDef['attrs']['_FillValue']
+
+        if remus600Platform.sensorHasAttr(sensorDef, 'valid_max'):
+
+            outOfRangeHigh = profileData[ profileDataColumn ] > sensorDef['attrs']['valid_max']
+
+            if profileData[profileDataColumn][outOfRangeHigh].size > 0:
+
+                # TBD - eventually stub out logging, leave in to get a handle on bad data
+                replacedStr = ''
+                for index, value in profileData[profileDataColumn][outOfRangeHigh].items():
+                    replacedStr = replacedStr + str(dateTimeMs[index]) + ' ' + \
+                    str(profileData[profileDataColumn][index]) + '\n'
+                    
+                logging.warning('Profile ' + str(profileId) + ', ' + instrument +
+                                ', sensor ' + profileDataColumn +
+                                ' contains high out of range data. ' +
+                                'Replacing with _FillValue ' +
+                                str(sensorDef['attrs']['_FillValue']) + ' at: \n' +
+                                replacedStr)
+
+                # Conditionally replacing dataframe values requires odd syntax below
+                profileData.loc[profileData[profileDataColumn] > sensorDef['attrs']['valid_max'],
+                                profileDataColumn] = sensorDef['attrs']['_FillValue']
