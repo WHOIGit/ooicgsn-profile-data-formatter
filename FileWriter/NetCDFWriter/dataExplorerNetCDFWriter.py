@@ -29,6 +29,7 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
     def __init__( self ) :
         super().__init__()
 
+        self._deploymentId = 'R00000'
         self._trajectoryName = ''
         self._trajectoryDateTime = ''
         self._sourceFile = ""
@@ -50,6 +51,14 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         self.dateTimeMin = 9999999999
         self.dateTimeMax = 0
         self.timeResolution = 0.0
+
+    @property
+    def deploymentId(self):
+        return self._deploymentId
+
+    @deploymentId.setter
+    def deploymentId(self, id):
+        self._deploymentId = id
 
     @property
     def trajectoryName(self):
@@ -118,7 +127,7 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
 
         # Open output netcdf file for trajectory
 
-        filePath = os.path.join( self.outputPath, self.trajectoryName + '.nc' )
+        filePath = os.path.join( self.outputPath, self.trajectoryName + '_' + self.deploymentId + '.nc' )
         if os.path.exists(filePath):
             if self.overwriteExistingFiles == False:
                 logging.warning("File exists, overwrite not selected " + filePath)

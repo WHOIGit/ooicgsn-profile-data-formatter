@@ -316,6 +316,8 @@ class remus600Platform( auvPlatform ) :
                     deWriter.overwriteExistingFiles = self.replaceOutputFiles
                     deWriter.outputCompressionLevel = self.outputCompression
                     deWriter.writeFormat = self.outputFormat
+                    deWriter.deploymentId = 'R' + \
+                       self.deploymentCfg['global_attributes']['deployment_number']
                     deWriter.trajectoryName = self.deploymentCfg['trajectory_name']
                     deWriter.trajectoryDateTime = self.deploymentCfg['trajectory_datetime']
                     deWriter.sourceFile = dataFile
@@ -372,7 +374,7 @@ class remus600Platform( auvPlatform ) :
                 # get data for sensor's instrument within profile bounds
 
                 profileData = self.getProfileData( sensorDef, data, gpsData,
-                                                   profileStartTime, profileEndTime )
+                                                   profileStartTime, profileEndTime ).copy()
 
                 # combine time fields to get time at finest available resolution
 
@@ -787,7 +789,6 @@ class remus600Platform( auvPlatform ) :
         if not profileDataColumn in profileData.columns:
             return
 
-        #print( 'purging column ' + profileDataColumn )
         instrument = "instrument unspecified"
         if remus600Platform.sensorHasAttr(sensorDef, 'instrument'):
             instrument = sensorDef['attrs']['instrument']
@@ -812,8 +813,7 @@ class remus600Platform( auvPlatform ) :
                                 ' at: \n' + replacedStr)
 
                 # Conditionally replacing dataframe values requires odd syntax below
-                profileData.loc[profileData[profileDataColumn] < sensorDef['attrs']['valid_min'],
-                                profileDataColumn] = sensorDef['attrs']['_FillValue']
+                profileData.loc[ outOfRangeLow, profileDataColumn] = sensorDef['attrs']['_FillValue']
 
         if remus600Platform.sensorHasAttr(sensorDef, 'valid_max'):
 
@@ -835,5 +835,4 @@ class remus600Platform( auvPlatform ) :
                                 replacedStr)
 
                 # Conditionally replacing dataframe values requires odd syntax below
-                profileData.loc[profileData[profileDataColumn] > sensorDef['attrs']['valid_max'],
-                                profileDataColumn] = sensorDef['attrs']['_FillValue']
+                profileData.loc[ outOfRangeHigh, profileDataColumn] = sensorDef['attrs']['_FillValue']
