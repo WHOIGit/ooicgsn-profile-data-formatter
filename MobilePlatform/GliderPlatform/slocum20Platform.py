@@ -403,6 +403,8 @@ class slocum20Platform( gliderPlatform ) :
                 deWriter.overwriteExistingFiles = self.replaceOutputFiles
                 deWriter.outputCompressionLevel = self.outputCompression
                 deWriter.writeFormat = self.outputFormat
+                deWriter.deploymentId = 'R' + \
+                    self.deploymentDefs['global_attributes']['deployment_number']
                 deWriter.trajectoryName = self.deploymentDefs['trajectory_name']
                 deWriter.trajectoryDateTime = self.deploymentDefs['trajectory_datetime']
                 deWriter.inputFiles = output_nc_files
