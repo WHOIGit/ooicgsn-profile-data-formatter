@@ -399,10 +399,10 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         ooiVarName = dacVarName
 
         if dacVarName == 'time':
-            ooiVarName = 'precise_time'
+            ooiVarName = 'time'
 
         elif dacVarName == 'time_qc':
-            ooiVarName = 'precise_time_qc'
+            ooiVarName = 'time_qc'
 
         elif dacVarName == 'lat':
             ooiVarName = 'precise_lat'
@@ -418,10 +418,10 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
             ooiVarName = 'precise_lon_qc'
 
         elif dacVarName == 'profile_time':
-            ooiVarName = 'time'
+            ooiVarName = 'profile_time'
 
         elif dacVarName == 'profile_time_qc':
-            ooiVarName = 'time_qc'
+            ooiVarName = 'profile_time_qc'
 
         elif dacVarName == 'profile_lat':
             ooiVarName = 'lat'
