@@ -1,5 +1,11 @@
 # README #
 
+New note:
+
+0521/2023 - To calculate CDOM using dark offset and scale factors from the sensor_defs.cfg, you must also change the "observation_type" attribute to "calculated", as shown below.
+
+![sensor_defs.json](sensor_defs_cdom.png "sensor_defs")
+
 ### What is this repository for? ###
 
 * This is the ProfileDataFormatter software development repo, containing the ProfileDataFormatter python application. The app is used to to format data from profiling mobile platforms (such as gliders and AUVs) into netCDF files for import into oceanographic instrument data repositories, such as the IOOS-DAC (https://ioos.github.io/ioosngdac/) and OOI Data Explorer (https://dataexplorer.oceanobservatories.org/). The application is derived from work done by Stuart Pearce at OSU <https://github.com/s-pearce/gliderdac/wiki> processing Slocum Glider data for import into IOOS-DAC. That gliderdac application is imported as a git subtree under legacy in this repository. The gliderdac code is used "as is" to implement formatting for the Slocum glider.

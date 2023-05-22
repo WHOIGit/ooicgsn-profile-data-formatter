@@ -553,6 +553,27 @@ class remus600Platform( auvPlatform ) :
             raise Exception("Invalid profile, see log file for details")
 
         #
+        # CDOM
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'cdom' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime )
+            corrCDOM = self.dataProcessor.processCDOMData(
+                instrData[ sensorDef['attrs']['subset_field'] ],
+                sensorDef['attrs']['dark_offset'],
+                sensorDef['attrs']['scale_factor'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars[ 'cdom' ] = { 'values': corrCDOM, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor CDOM in sensor_defs config,' +
+                            ' required for CDOM calculations')
+            raise Exception("Invalid profile, see log file for details")
+
+        
+        #
         # dissolved oxygen
         #
 

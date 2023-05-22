@@ -283,9 +283,9 @@
             "accuracy": " ",
             "ancillary_variables": "",
             "instrument": "instrument_flbbcd",
-	    "subset_field": "parameter8",
+	    "subset_field": "parameter7",
             "long_name": "Chromophoric dissolved organic matter",
-            "observation_type": "measured",
+            "observation_type": "calculated",
             "OOI_data_product_name": "",
             "OOI_data_level": "L1a",
             "platform": "platform",
@@ -293,7 +293,9 @@
             "resolution": " ",
             "standard_name": "concentration_of_colored_dissolved_organic_matter_in_sea_water_expressed_as_equivalent_mass_fraction_of_quinine_sulfate_dihydrate",            "units": "ppb",
             "valid_max": 375.0,
-            "valid_min": 0.0
+            "valid_min": 0.0,
+            "dark_offset": 0.0,
+            "scale_factor": 1.0
 	}
     },
     "par_calc_irradiance": {
