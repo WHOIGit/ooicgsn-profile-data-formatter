@@ -574,6 +574,27 @@ class remus600Platform( auvPlatform ) :
 
         
         #
+        # Clorophyll
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg( self.sensorsCfg, 'chlorophyll_a' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime )
+            corrChl = self.dataProcessor.processChlorophyllData(
+                instrData[ sensorDef['attrs']['subset_field'] ],
+                sensorDef['attrs']['dark_offset'],
+                sensorDef['attrs']['scale_factor'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars[ 'chlorophyll_a' ] = { 'values': corrChl, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor chlorophyll_a in sensor_defs config,' +
+                            ' required for chlorophyll_a calculations')
+            raise Exception("Invalid profile, see log file for details")
+
+        
+        #
         # dissolved oxygen
         #
 

@@ -260,9 +260,9 @@
             "accuracy": " ",
             "ancillary_variables": "chlorophyll_a_qc",
             "instrument": "instrument_flbbcd",
-	    "subset_field": "parameter5",
+	    "subset_field": "parameter4",
             "long_name": "Chlorophyll A concentration",
-            "observation_type": "measured",
+            "observation_type": "calculated",
             "OOI_data_product_name": "",
             "OOI_data_level": "L1a",
             "platform": "platform",
@@ -270,8 +270,10 @@
             "resolution": " ",
             "standard_name": "mass_concentration_of_chlorophyll_a_in_sea_water",
             "units": "ug L-1",
-            "valid_max": 50.0,
-            "valid_min": 0.01
+            "valid_max": 350.0,
+            "valid_min": 0.01,
+            "dark_offset": 50.0,
+            "scale_factor": 0.0844
 	}
     },
     "flort_cdom":{

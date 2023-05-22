@@ -322,6 +322,19 @@ class remus600Processor( auvProcessor ) :
 
         return correctedCDOM
 
+    def processChlorophyllData(self, sensorCounts, calibratedDarkOffset, calibratedScaleFactor):
+        """
+        Clorophyll data needs calculation from counts using calibration constants
+        :param sensorCounts: output by FLBBCD
+        :param calibratedDarkOffset - in sensor_defs.json from calibration certificate
+        :param calibratedScaleFactor - in sensor_defs.json from calibration certificate
+        :return: correctedChlorophyll
+        """
+
+        correctedChlorophyll = (sensorCounts - calibratedDarkOffset) * calibratedScaleFactor
+
+        return correctedChlorophyll
+
     def calculateDensity(self, salinity, temperature, pressure, latitude, longitude):
         """Calculates density given practical salinity, temperature, pressure, latitude,
         and longitude using Gibbs gsw SA_from_SP and rho functions.
