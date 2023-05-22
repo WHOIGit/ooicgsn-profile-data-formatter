@@ -4,7 +4,7 @@ New note:
 
 05/21/2023 - To calculate CDOM using dark offset and scale factors from the sensor_defs.cfg, you must also change the "observation_type" attribute to "calculated", as shown below.
 
-![sensor_defs.json](sensor_defs_cdom.png "sensor_defs")
+![sensor_defs.json](sensor_defs_cdom.png "sensor_defs") This note also holds true for chlorophyll_a, which is now also calculated in the same way.
 
 ### What is this repository for? ###
 
