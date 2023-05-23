@@ -7,8 +7,13 @@ import argparse
 import shutil
 # import pdb
 import glob
-import json
 
+import ooidac.processing.attitude
+import ooidac.processing.ctd
+import ooidac.processing.fluorometer
+import ooidac.processing.oxygen
+import ooidac.processing.par
+import ooidac.processing.velocity
 from ooidac.writers.netCDFwriter import NetCDFWriter
 
 from ooidac.constants import NETCDF_FORMATS, LLAT_SENSORS
@@ -17,8 +22,9 @@ from ooidac.validate import validate_sensors, validate_ngdac_var_names
 import ooidac.processing as processing
 from ooidac.data_classes import DbaData
 from ooidac.profiles import Profiles
-from ooidac.data_checks import check_file_goodness, check_for_dav_sensors
+from ooidac.data_checks import check_file_goodness
 from ooidac.constants import SCI_CTD_SENSORS
+from ooidac.status import Status
 from dba_file_sorter import sort_function
 
 
@@ -90,31 +96,72 @@ def main(args):
     # Create a status.json file in the config directory given to hold
     # information from the latest run
     status_path = os.path.join(config_path, 'status.json')
-    if not os.path.exists(status_path):
-        status = {
-            "history": "", "date_created": "", "date_modified": "",
-            "date_issued": "", "version": "", "uuid": "",
-            "raw_directory": os.path.dirname(os.path.realpath(dba_files[0])),
-            "nc_directory": output_path,
-            "next_profile_id": None, "files_processed": [],
-            "profiles_created": [], "profiles_uploaded": [],
-            "profile_to_data_map": []
-            }
+
+    # if not os.path.exists(status_path):
+    #     status = {
+    #         "history": "", "date_created": "", "date_modified": "",
+    #         "date_issued": "", "version": "", "uuid": "",
+    #         "raw_directory": os.path.dirname(os.path.realpath(dba_files[0])),
+    #         "nc_directory": output_path,
+    #         "next_profile_id": None, "files_processed": [],
+    #         "profiles_created": [], "profiles_uploaded": [],
+    #         "profile_to_data_map": []
+    #         }
+    # else:
+    #     with open(status_path, 'r') as fid:
+    #         status = json.load(fid)
+    status = Status(status_path)
+
+    # eliminate files that have already run
+    if clobber:
+        files_to_run = dba_files
+        status.update_modified_date()
+        already_processed = []  # see else for description
     else:
-        with open(status_path, 'r') as fid:
-            status = json.load(fid)
+        dba_files2 = list(map(os.path.abspath, dba_files))
+        files_to_run = set(dba_files2).difference(
+            status.info['files_processed'])
+        files_to_run = list(files_to_run)
+        # save a list of profiles created basenames for printout at the end
+        already_processed = list(map(
+            os.path.basename, status.info['profiles_created']))
+
+    if files_to_run:
+        n_skipped = len(files_to_run) - len(dba_files)
+        logging.debug("Skipping {:d} files already run".format(n_skipped))
+        files_to_run.sort(key=sort_function)
+    else:
+        logging.info("No new files to run, exiting.")
+        return 0
+
 
     # get the next profile id if this dataset has been run before.
-    # ToDo: for now this works for realtime, but it should be changed to
-    #  exclude cases where you might re-run a recovered dataset and clobber.
-    if status['next_profile_id'] and start_profile_id > 0:
-        start_profile_id = status['next_profile_id']
+    if status.info['next_profile_id'] and start_profile_id > 0 and not clobber:
+        start_profile_id = status.info['next_profile_id']
+
 
     # Create the Trajectory NetCDF writer
     ncw = NetCDFWriter(
         config_path, output_path, comp_level=comp_level,
         nc_format=nc_format, starting_profile_id=start_profile_id,
         clobber=clobber)
+    if not status.trajectory:
+        status.trajectory = ncw.trajectory
+
+    # use running status object to write global attributes
+    ncw.add_global_attribute(
+        'history', status.info['history'], override=True)
+    ncw.add_global_attribute(
+        'date_created', status.info['date_created'], override=True)
+    ncw.add_global_attribute(
+        'date_modified', status.info['date_modified'], override=True)
+    ncw.add_global_attribute(
+        'date_issued', status.info['date_issued'], override=True)
+    ncw.add_global_attribute(
+        'uuid', status.info['uuid'], override=True)
+    ncw.add_global_attribute(
+        'version', status.info['version'], override=True)
+
     # Make sure we have llat_* sensors defined in ncw.nc_sensor_defs
     ctd_valid = validate_sensors(ncw.nc_sensor_defs, ctd_sensors)
     if not ctd_valid:
@@ -137,11 +184,12 @@ def main(args):
     # sub-level to the file being processed after an initial processing file
     # statement
 
-    # Write one NetCDF file for each input file
-    output_nc_files = []
-    source_dba_files = []
-    processed_dbas = []
-    profile_to_data_map = []
+    # These are now handled by the Status class
+    # # Write one NetCDF file for each input file
+    # output_nc_files = []
+    # source_dba_files = []
+    # processed_dbas = []
+    # profile_to_data_map = []
 
     # Pre-processing
     # ToDo: clean this up
@@ -150,8 +198,10 @@ def main(args):
         if "processing" in ncw.config_sensor_defs[var_defs]:
             var_processing[var_defs] = ncw.config_sensor_defs[var_defs].pop(
                 "processing")
+    # to be added:
+    # var_processing = processing.init_processing_dict(var_processing)
 
-    for dba_file in dba_files:
+    for dba_file in files_to_run:
         # change to non-indented log format (see above)
         logmanager.update_format(start_log_format)
 
@@ -176,6 +226,8 @@ def main(args):
                 or mission == 'LASTGASP.MI'
                 or mission == 'INITIAL.MI'):
             logging.info('Skipping {:s} data file'.format(mission))
+            # skip source file in future runs by adding to status
+            status.add_src(dba_file)
             continue
 
         # check the data file for the required sensors and that science data
@@ -187,6 +239,7 @@ def main(args):
                 'the required sensors, or does not have any dives deep enough '
                 'to produce DAC formatted profiles'.format(dba.source_file)
             )
+            status.add_src(dba_file)
             continue
 
         scalars = []
@@ -221,7 +274,7 @@ def main(args):
         # Convert m_pitch and m_roll variables to degrees, and add back to
         # the data instance with metadata attributes
         if 'm_pitch' in dba.sensor_names and 'm_roll' in dba.sensor_names:
-            dba = processing.pitch_and_roll(dba)
+            dba = ooidac.processing.attitude.pitch_and_roll(dba)
             if dba is None:
                 continue
 
@@ -229,34 +282,40 @@ def main(args):
         # and adds them back to the data instance with metadata attributes.
         # Requires `llat_latitude/longitude` variables are in the data
         # instance from the `create_llat_sensors` method
-        dba = processing.ctd_data(dba, SCI_CTD_SENSORS)
+        dba = ooidac.processing.ctd.ctd_data(dba, SCI_CTD_SENSORS)
         if dba is None:
             continue
 
         # Process `sci_oxy4_oxygen` to OOI L2 compensated for salinity and
         # pressure and converted to umol/kg.
         if 'corrected_oxygen' in ncw.config_sensor_defs:
-            dba = processing.check_and_recalc_o2(
+            dba = ooidac.processing.oxygen.check_and_recalc_o2(
                 dba,
                 calc_type=var_processing['corrected_oxygen'][
                     'calculation_type'],
                 cal_dict=var_processing['corrected_oxygen']['cal_coefs']
             )
-            dba = processing.o2_s_and_p_comp(dba, 'temp_corrected_oxygen')
+            dba = ooidac.processing.oxygen.o2_s_and_p_comp(dba, 'temp_corrected_oxygen')
             oxy = dba['oxygen']
             oxy['sensor_name'] = 'corrected_oxygen'
             dba['corrected_oxygen'] = oxy
         elif 'sci_oxy4_oxygen' in dba.sensor_names:
-            dba = processing.o2_s_and_p_comp(dba)
+            dba = ooidac.processing.oxygen.o2_s_and_p_comp(dba)
             if dba is None:
                 continue
 
         # Re_calculate chlorophyll
         if 'corrected_chlor' in ncw.config_sensor_defs:
-            dba = processing.recalc_chlor(
+            dba = ooidac.processing.fluorometer.recalc_chlor(
                 dba, **var_processing['corrected_chlor']
-                # dark_offset=corrections['corrected_chlor']['dark_offset'],
-                # scale_factor=corrections['corrected_chlor']['scale_factor']
+            )
+            if dba is None:
+                continue
+
+        # Re_calculate CDOM
+        if 'corrected_cdom' in ncw.config_sensor_defs:
+            dba = ooidac.processing.fluorometer.recalc_cdom(
+                dba, **var_processing['corrected_cdom']
             )
             if dba is None:
                 continue
@@ -265,7 +324,7 @@ def main(args):
         if 'corrected_par' in ncw.config_sensor_defs:
             # par_sensor_dark = corrections['corrected_par']['sensor_dark']
             # par_sf = corrections['corrected_par']['scale_factor']
-            dba = processing.recalc_par(
+            dba = ooidac.processing.par.recalc_par(
                 dba, **var_processing['corrected_par']
                 # sensor_dark=par_sensor_dark,
                 # scale_factor=par_sf
@@ -283,7 +342,7 @@ def main(args):
                     'with the glider sensor name to use for '
                     'processing.'.format(var_name)
                 )
-                bb_sensor = bksctr_args.pop('source_sensor')
+                bb_sensor = bksctr_args.get('source_sensor')
 
             else:
                 # for now assume we are using flbbcds with 700 nm wavelength as
@@ -293,7 +352,7 @@ def main(args):
                 wavelength = 700.0
                 bb_sensor = 'sci_flbbcd_bb_units'
 
-            dba = processing.backscatter_total(
+            dba = ooidac.processing.fluorometer.backscatter_total(
                 dba, bb_sensor, var_name, **bksctr_args)
             if dba is None:
                 continue
@@ -321,6 +380,15 @@ def main(args):
                 'nc_var_name': rw_var}
             scalars.append(radiation_wavelength)
 
+        # To be added:
+        # ---------General Processing------------#
+        # if var_processing:
+        #     for var in var_processing:
+        #         dba = processing.process_and_add(dba, var, var_processing[var])
+        #         if dba is None:
+        #             continue
+
+
         # If Depth Averaged Velocity (DAV) data available, (i.e. any of the
         # `*_water_vx/vy` sensors are in the data) get the values and calculate
         # the mean position and time of the segment as the postion and time
@@ -328,7 +396,7 @@ def main(args):
         if file_check.dav_sensors:
             # get segment mean time, segment mean lat, and segment mean lon
             # (underwater portion only)
-            seg_time, seg_lat, seg_lon = processing.get_segment_time_and_pos(
+            seg_time, seg_lat, seg_lon = ooidac.processing.velocity.get_segment_time_and_pos(
                 dba)
             if seg_time is None or seg_lat is None or seg_lon is None:
                 break
@@ -340,7 +408,7 @@ def main(args):
             # segement file.
             dba_index = dba_files.index(dba_file)
             next2files = dba_files[dba_index + 1:dba_index + 3]
-            vx, vy = processing.get_u_and_v(dba, check_files=next2files)
+            vx, vy = ooidac.processing.velocity.get_u_and_v(dba, check_files=next2files)
 
             scalars.extend([seg_time, seg_lat, seg_lon, vx, vy])
 
@@ -387,11 +455,9 @@ def main(args):
             # ToDo: fix the history writer in NetCDFWriter
             out_nc_file = ncw.write_profile(profile, scalars)
             if out_nc_file:  # can be None if skipping
-                output_nc_files.append(os.path.basename(out_nc_file))
-                source_dba_files.append(os.path.basename(dba_file))
-                profile_to_data_map.append((out_nc_file, dba_file))
+                status.add_nc(out_nc_file, dba_file)
 
-        processed_dbas.append(os.path.basename(dba_file))
+        status.add_src(dba_file)
 
     # Delete the temporary directory once files have been moved
     try:
@@ -406,22 +472,24 @@ def main(args):
     # write the processed files and last profile id to status.json
     logging.debug('Writing run status to status.json')
     if start_profile_id > 0:
-        status['next_profile_id'] = ncw.profile_id
-    already_processed = set(status['files_processed'])
-    set_processed_dbas = set(processed_dbas)
-    processed_dbas = list(set_processed_dbas.difference(already_processed))
-    processed_dbas.sort(key=sort_function)  # sets don't preserve order
-    status['files_processed'].extend(processed_dbas)
-    status['profiles_created'].extend(output_nc_files)
-    status['profile_to_data_map'].extend(profile_to_data_map)
-    with open(status_path, 'w') as fid:
-        json.dump(status, fid, indent=2)
+        status.info['next_profile_id'] = ncw.profile_id
+        status.write()
+    # already_processed = set(status['files_processed'])
+    # set_processed_dbas = set(processed_dbas)
+    # processed_dbas = list(set_processed_dbas.difference(already_processed))
+    # processed_dbas.sort(key=sort_function)  # sets don't preserve order
+    # status['files_processed'].extend(processed_dbas)
+    # status['profiles_created'].extend(output_nc_files)
+    # status['profile_to_data_map'].extend(profile_to_data_map)
+    # with open(status_path, 'w') as fid:
+    #     json.dump(status, fid, indent=2)
 
     # Print the list of files created
     sys.stdout.write('Profiles NC files written:\n')
-    for source_dba, output_nc_file in zip(source_dba_files, output_nc_files):
-        # os.chmod(os.path.join(output_path, output_nc_file), 0o664)
-        sys.stdout.write('\t{:s} -> {:s}\n'.format(source_dba, output_nc_file))
+    for output_nc_file, source_dba in status.data_map:
+        if output_nc_file not in already_processed:
+            sys.stdout.write('\t{:s} -> {:s}\n'.format(
+                source_dba, output_nc_file))
 
     return 0
 
