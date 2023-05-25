@@ -272,8 +272,8 @@
             "units": "ug L-1",
             "valid_max": 350.0,
             "valid_min": 0.01,
-            "dark_offset": 50.0,
-            "scale_factor": 0.0844
+            "calibration_dark_offset": 50.0,
+            "calibration_scale_factor": 0.0844
 	}
     },
     "flort_cdom":{
@@ -292,12 +292,11 @@
             "OOI_data_level": "L1a",
             "platform": "platform",
             "precision": " ",
-            "resolution": " ",
             "standard_name": "concentration_of_colored_dissolved_organic_matter_in_sea_water_expressed_as_equivalent_mass_fraction_of_quinine_sulfate_dihydrate",            "units": "ppb",
             "valid_max": 375.0,
             "valid_min": 0.0,
-            "dark_offset": 0.0,
-            "scale_factor": 1.0
+            "calibration_dark_offset": 48.0,
+            "calibration_scale_factor": 0.0911
 	}
     },
     "par_calc_irradiance": {

@@ -562,8 +562,8 @@ class remus600Platform( auvPlatform ) :
                                              profileStartTime, profileEndTime )
             corrCDOM = self.dataProcessor.processCDOMData(
                 instrData[ sensorDef['attrs']['subset_field'] ],
-                sensorDef['attrs']['dark_offset'],
-                sensorDef['attrs']['scale_factor'] )
+                sensorDef['attrs']['calibration_dark_offset'],
+                sensorDef['attrs']['calibration_scale_factor'] )
             dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
                                                  instrData.get('missionTime') )
             calculatedVars[ 'cdom' ] = { 'values': corrCDOM, 'times': dataTimesMs }
@@ -583,8 +583,8 @@ class remus600Platform( auvPlatform ) :
                                              profileStartTime, profileEndTime )
             corrChl = self.dataProcessor.processChlorophyllData(
                 instrData[ sensorDef['attrs']['subset_field'] ],
-                sensorDef['attrs']['dark_offset'],
-                sensorDef['attrs']['scale_factor'] )
+                sensorDef['attrs']['calibration_dark_offset'],
+                sensorDef['attrs']['calibration_scale_factor'] )
             dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
                                                  instrData.get('missionTime') )
             calculatedVars[ 'chlorophyll_a' ] = { 'values': corrChl, 'times': dataTimesMs }
