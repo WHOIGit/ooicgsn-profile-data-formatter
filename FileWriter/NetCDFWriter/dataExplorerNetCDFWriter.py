@@ -141,7 +141,8 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         #                                 self.trajectoryName,
         #                                 self.deploymentId );
 
-        filePath = os.path.join( self.outputPath, self.trajectoryName + '_' + self.deploymentId + '.nc' )
+        filePath = os.path.join( self.outputPath, self.trajectoryName + '.nc' )
+        #filePath = os.path.join( self.outputPath, self.trajectoryName + '_' + self.deploymentId + '.nc' )
         if os.path.exists(filePath):
             if self.overwriteExistingFiles == False:
                 logging.warning("File exists, overwrite not selected " + filePath)
