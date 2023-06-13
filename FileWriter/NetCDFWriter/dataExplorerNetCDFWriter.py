@@ -93,13 +93,13 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
         self._inputFiles = fileList
 
     # File naming requirement for Explorer "A####_R#####_YYYYMMDDTHHMMZ.nc"
-    def buildNCFilePath(self, path, trajectory, deployId):
+    #def buildNCFilePath(self, path, trajectory, deployId):
 
-        [asset,deployDateTime] = trajectory.split("-")
+    #    [asset,deployDateTime] = trajectory.split("-")
 
-        filePath = os.path.join( path, asset + '_' + deployId + "_" +
-                                 deployDateTime + 'Z.nc' )
-        return filePath
+    #    filePath = os.path.join( path, asset + '_' + deployId + "_" +
+    #                             deployDateTime + 'Z.nc' )
+    #    return filePath
         
 
     # virtual method for preparing to write output
@@ -137,11 +137,11 @@ class dataExplorerNetCDFWriter( netCDFWriter ) :
 
         # Open output netcdf file for trajectory
 
-        filePath = self.buildNCFilePath( self.outputPath,
-                                         self.trajectoryName,
-                                         self.deploymentId );
+        #filePath = self.buildNCFilePath( self.outputPath,
+        #                                 self.trajectoryName,
+        #                                 self.deploymentId );
 
-        #filePath = os.path.join( self.outputPath, self.trajectoryName + '_' + self.deploymentId + '.nc' )
+        filePath = os.path.join( self.outputPath, self.trajectoryName + '_' + self.deploymentId + '.nc' )
         if os.path.exists(filePath):
             if self.overwriteExistingFiles == False:
                 logging.warning("File exists, overwrite not selected " + filePath)
