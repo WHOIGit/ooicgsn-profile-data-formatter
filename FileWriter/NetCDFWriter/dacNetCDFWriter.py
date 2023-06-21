@@ -197,7 +197,7 @@ class dacNetCDFWriter(netCDFWriter) :
         # Create time var on 1/10 sec cadence
 
         times = np.arange( self.profileStartTime, self.profileEndTime, 0.1 )
-        timeVar = self.nc.createVariable('time', np.float64, ('time',), fill_value=False)
+        timeVar = self.nc.createVariable('time', np.float64, ('time',), fill_value=float('NaN'))
         timeVar[:] = times
 
         # add the passed time attributes to the time variable
