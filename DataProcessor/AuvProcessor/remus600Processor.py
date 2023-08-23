@@ -202,10 +202,22 @@ class remus600Processor( auvProcessor ) :
     def interpolateGpsData(self, gpsData ):
         """
         gps data at 1 sec resolution while surfaced, blank when not;
+
+        It turns out that this gps instrument continues to report the lat/lon values
+        for the most recent surface fix when submerged, simply updating the FixAge variable.
+        Soooo, we now have to filter the values we interpolate from with (FixAge == 0)
+
         fill to 1 sec resolution through interpolation
         :param gpsData:
         :return: filledGpsData
         """
+
+        # Filter incoming gps data to those values where FixAge == 0
+
+        rows = gpsData.loc[ gpsData['fixAge'] == 0]
+        filteredTime = rows['timestamp']
+        filteredLat = rows['latitude']
+        filteredLon = rows['longitude']
 
         #  create new 1 second res timestamp array (no gaps)
 
@@ -214,8 +226,10 @@ class remus600Processor( auvProcessor ) :
 
         # Interpolate lat, lon to 1 second resolution in gaps
 
-        allLatitudes = np.interp( allTimestamps, gpsData['timestamp'], gpsData['latitude'] )
-        allLongitudes = np.interp( allTimestamps, gpsData['timestamp'], gpsData['longitude'] )
+        #allLatitudes = np.interp( allTimestamps, gpsData['timestamp'], gpsData['latitude'] )
+        #allLongitudes = np.interp( allTimestamps, gpsData['timestamp'], gpsData['longitude'] )
+        allLatitudes = np.interp( allTimestamps, filteredTime, filteredLat )
+        allLongitudes = np.interp( allTimestamps, filteredTime, filteredLon )
 
         filledGpsData = { 'timestamp': allTimestamps,
                           'latitude': allLatitudes,

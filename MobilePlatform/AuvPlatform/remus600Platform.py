@@ -254,6 +254,14 @@ class remus600Platform( auvPlatform ) :
                 gpsData = data.getDataForMessageId( int( gpsCfg['attrs']['subset_msg_id'] ))
                 gpsDataNoGaps = self.dataProcessor.interpolateGpsData( gpsData )
 
+                #dumpfile = open( '/tmp/gps_04052019.csv', 'w')
+                #dumpfile.write( 'timestamp,lat,lon\n')
+                #for iii in range( len(gpsDataNoGaps.timestamp) ):
+                #    dumpfile.write(str(gpsDataNoGaps.timestamp[iii]) + ',' +
+                #                   str(gpsDataNoGaps.latitude[iii]) + ',' +
+                #                   str(gpsDataNoGaps.longitude[iii]) + '\n')
+                #dumpfile.close()
+
                 # compute profile bounds using data from CTD
 
                 allProfileBounds = self.useCtdDataToComputeProfiles( data )
