@@ -161,8 +161,8 @@ class remus600Processor( auvProcessor ) :
         end = 1
         while end < len(updownlevel):
 
-            #if (times[end] - times[end - 1] > 1000 * self.MAX_TIME_GAP_SECONDS):
-            #    logging.info(" gap between " + str(end-1) + ' and ' + str(end))
+            if (times[end] - times[end - 1] > 1000 * self.MAX_TIME_GAP_SECONDS):
+                logging.info(" gap between " + str(end-1) + ' and ' + str(end))
 
             # if time gap too large or direction changes, end current profile here
 
@@ -171,7 +171,7 @@ class remus600Processor( auvProcessor ) :
                 if np.fabs(depths[end-1] - depths[start]) >= minDeltaD and \
                     times[end-1] - times[start] >= minDeltaTMillisecs:
                     profileBounds.append( [ times[start], times[end-1] ] )
-                    #logging.info("profile between " + str(start) + ' and ' + str(end-1))
+                    logging.info("profile between " + str(start) + ' and ' + str(end-1))
 
                 start = end
             end = end + 1
@@ -182,7 +182,7 @@ class remus600Processor( auvProcessor ) :
             if np.fabs(depths[end - 1] - depths[start]) >= minDeltaD and \
                     times[end - 1] - times[start] >= minDeltaTMillisecs:
                 profileBounds.append( [ times[start], times[end-1] ] )
-                #logging.info("profile between " + str(start) + ' and ' + str(end - 1))
+                logging.info("profile between " + str(start) + ' and ' + str(end - 1))
 
         # Convert profile bounds back to unixtime UTC
 

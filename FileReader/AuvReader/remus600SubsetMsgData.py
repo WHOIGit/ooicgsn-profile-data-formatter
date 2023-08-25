@@ -199,6 +199,24 @@ class remus600SubsetMsgData(  ) :
     def cachedData(self, dataframe):
         self._cachedData = dataframe
 
+    def filterBadTimestamps(self, df):
+        """
+        It has been found that Remus AUV subset message data can contain
+        timestamps that are 24 hrs older than expected when crossing a day
+        boundary. If found, set equal to the following timestamp. That is what
+        it should be, and when combined with missionTime millisecs, it will
+        be properly differentiated from the succeeding time, where needed.
+        """
+
+        if 'timestamp' in df.columns:
+
+            for i in range(1, len(df)):
+
+                if (df.at[i,'timestamp'] < df.at[i-1,'timestamp']):
+
+                    df.at[i,'timestamp'] = df.at[i+1,'timestamp']
+        
+
     def getData(self):
         """
         Retrieve message specific data as a pandas dataframe.
@@ -214,6 +232,10 @@ class remus600SubsetMsgData(  ) :
                     self.dataFile, header=0,
                     names= self.msgTypeFields[self.msgId].split(','),
                     low_memory = False)
+
+                # Fix bug in input timestamps
+                self.filterBadTimestamps( df )
+                
                 #memory issues - do not cache for now
                 # Note: enabling caching speedup 2x, memory 2x
                 self.cachedData = df
