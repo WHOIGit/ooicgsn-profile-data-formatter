@@ -58,7 +58,7 @@
         "attrs": {
             "axis": "Z",
             "long_name": "Pressure",
-            "observation_type": "measured",
+            "observation_type": "calculated",
             "OOI_data_product_name": "PRESWAT",
             "OOI_data_level": "L1a",
             "positive": "down",

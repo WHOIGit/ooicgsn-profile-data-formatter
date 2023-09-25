@@ -4,6 +4,8 @@ New note:
 
 05/21/2023 - To calculate CDOM using dark offset and scale factors from the sensor_defs.cfg, you must also change the "observation_type" attribute to "calculated", as shown below. This note also holds true for chlorophyll_a, which is now also calculated in the same way.
 
+09/25/2023 - Several early AUV deployments use the old Seabird CTD only. No Neil Brown CTD was installed. For those deployments, the subset_message_id field for the CTD instrument in the instruments.cfg file must be changed from 1107 to 1181. Additionally, in the sensor_defs.cfg file, the observation_type for the pressure sensor def must be changed from "measured" to "calculated", as this CTD's message data does not contain a pressure column.
+
 ![sensor_defs.json](sensor_defs_cdom.png "sensor_defs") 
 
 ### What is this repository for? ###

@@ -111,6 +111,22 @@ class remus600Platform( auvPlatform ) :
         logging.warning( 'No configuration found for sensor ' + sensorName )
         return None
 
+    def adjust_ctd_msg_id( self, data ) :
+
+        # Some old deployments used an old CTD with a different msg_id.
+        # If no data returned, try the alternate message id
+        
+        ctdCfg = remus600Platform.getInstrumentFromCfg( self.instrumentsCfg, 'instrument_ctd')
+        ctdData = data.getDataForMessageId( int(ctdCfg['attrs']['subset_msg_id']) )
+        if ctdData is None:
+            OLD_CTD_MSG_ID = 1181
+            if data.getDataForMessageId( OLD_CTD_MSG_ID ) is not None:
+                ctdCfg['attrs']['subset_msg_id'] = OLD_CTD_MSG_ID
+            else :
+                logging.error('FATAL: No CTD message type found in input file')
+                sys.exit()
+            
+
     def useCtdDataToComputeProfiles(self, data):
         """
         Wrap profile computation to force hi-res ctd data
@@ -120,8 +136,7 @@ class remus600Platform( auvPlatform ) :
         """
         ctdCfg = remus600Platform.getInstrumentFromCfg(
             self.instrumentsCfg, 'instrument_ctd')
-        ctdData = data.getDataForMessageId(
-            int(ctdCfg['attrs']['subset_msg_id']))
+        ctdData = data.getDataForMessageId( int(ctdCfg['attrs']['subset_msg_id']) )
 
         allProfileBounds = self.dataProcessor.computeProfiles(
             ctdData, "timestamp", "missionTime", "depth")
@@ -245,6 +260,9 @@ class remus600Platform( auvPlatform ) :
                     logging.error("Bad data file encountered {:s}".format(dataFile))
                     ret = -1
                     continue
+
+                # If necessary, remap the CTD subset_message_id
+                self.adjust_ctd_msg_id( data )
 
                 # Compute 1 sec res. gps data once for whole data file
                 # Gps data is 1 second cadence at surface, gaps during dives.
@@ -522,6 +540,25 @@ class remus600Platform( auvPlatform ) :
             raise Exception("Invalid profile, see log file for details")
 
         #
+        # some CTDs used on Remus AUV's have depth, not pressure
+        # so always compute pressure from depth
+        #
+
+        sensorDef = remus600Platform.getSensorDefFromCfg(self.sensorsCfg, 'pressure' )
+        if sensorDef:
+            instrData = self.getProfileData( sensorDef, data, gpsData,
+                                             profileStartTime, profileEndTime )
+            pressure = self.dataProcessor.depthToPressure( instrData['depth'], instrData['latitude'] )
+            dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
+                                                 instrData.get('missionTime') )
+            calculatedVars['pressure'] = { 'values': pressure, 'times': dataTimesMs }
+        else:
+            logging.warning('Missing sensor pressure in sensor_defs config,' +
+                            ' required for pressure calculation')
+            raise Exception("Invalid profile, see log file for details")
+        
+
+        #
         # density
         #
 
@@ -529,8 +566,19 @@ class remus600Platform( auvPlatform ) :
         if sensorDef:
             instrData = self.getProfileData( sensorDef, data, gpsData,
                                              profileStartTime, profileEndTime )
+
+            # Note: some older Remus platforms use a CTD that has depth instead of pressure
+            # If no pressure column exists, compute it from depth. - ppw09212023
+            
+            if not 'pressure'  in instrData.columns :
+                logging.warning('Old-style CTD detected, computing pressure from depth')
+                instrPressure = self.dataProcessor.depthToPressure( instrData['depth'],
+                                                               instrData['latitude'] )
+            else :
+                instrPressure = instrData['pressure']
+            
             density = self.dataProcessor.calculateDensity(
-                instrData['salinity'], instrData['temperature'], instrData['pressure'],
+                instrData['salinity'], instrData['temperature'], instrPressure,
                 instrData['latitude'], instrData['longitude'] )
             dataTimesMs = data.timesInMillisecs( instrData.get('timestamp'),
                                                  instrData.get('missionTime') )

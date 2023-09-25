@@ -238,6 +238,20 @@ class remus600Processor( auvProcessor ) :
         return DataFrame( filledGpsData )
 
 
+    def depthToPressure(self, depth, lat) :
+        """
+        Convert depth (in meters) to pressure (in dB)
+        """
+
+        raDepth = depth.to_numpy()
+        raLat = lat.to_numpy()
+
+        # depth to pressure
+        pressure = p_from_z( -raDepth , raLat)
+
+        return Series( pressure )
+
+
     def processOxygenData(self, rawO2Concentration, salinity, depth, temp, lat, lon, pref=0):
         """
         Note:
